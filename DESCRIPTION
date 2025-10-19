@@ -1,0 +1,24 @@
+Package: photobiologyFlecks
+Type: Package
+Title: Analysis of sun- and shade flecks
+Version: 0.1.0
+Authors@R: c(
+    person("Pedro J.", "Aphalo", 
+           email = "pedro.aphalo@helsinki.fi", 
+           role = c("aut", "cre"), 
+           comment = c(ORCID = "0000-0003-3385-972X"))
+    )
+Description: Functions for the analysis of time series of natural light 
+    irradiance measured at high frequency. Denoising, and quantification of
+    duration and amplitude of sun-, shade-, cloud- and wind flecks.
+License: GPL (>= 2)
+ByteCompile: true
+LazyLoad: true
+Encoding: UTF-8
+URL: https://docs.r4photobiology.info/photobiologyFlecks/
+BugReports: https://github.com/aphalo/photobiologyFlecks/issues/
+RoxygenNote: 7.3.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

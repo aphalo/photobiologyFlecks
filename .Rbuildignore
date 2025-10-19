@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^data.raw
+^tests-offline
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^tests-offline

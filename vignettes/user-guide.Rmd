@@ -1,0 +1,91 @@
+---
+title: "User Guide"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{User Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Set up
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(photobiologyInOut)
+library(photobiologyFlecks)
+```
+
+# Read data
+
+Read data from a CSV file as saved by Campbell Scientific's PC400 program containing data acquired with a CR6 data logger.
+
+```{r}
+file.name <- "data-raw/Viikki Tower_TableMilliSecond.dat"
+file.size(file.name)
+file.mtime(file.name)
+```
+
+The top `r 4 * 18e3` rows from a large file will be used in the examples.
+
+```{r}
+# read four chucks of 18000 observations each
+four_chunks.tb <- read_csi_dat(file.name, n_max = 4 * 18000)
+
+ncol(four_chunks.tb)
+colnames(four_chunks.tb)
+nrow(four_chunks.tb)
+```
+
+The time series data of sunligh have been measured in 15 min bursts separated by 15 min with no data acquisition. Data from each burst will be analysed separatey. For this the data frame will be split at the
+breaks between bursts.
+
+```{r}
+# keep all qty columns, add differences
+chunks.ls <-
+  split_chunks(four_chunks.tb,
+               qty.name = "PAR_Den_CS",
+               step.len = 0.051,
+               verbose = TRUE)
+```
+
+Summary shows us a list of four data frames, more precisely, tibbles. Each tibble containing 4 columns.
+
+```{r}
+summary(chunks.ls)
+```
+```{r}
+str(chunks.ls[[1]], give.attr = FALSE)
+```
+
+```{r}
+chunks_dn.ls <- denoise_chunk(chunks.ls, add.signs = TRUE) 
+```
+
+
+## Locating change points
+
+### Using `diff()`
+
+In a series without noise, the running difference is equal to zero at the point where the slope changes sign. In a noisy series, even without a consistent change in slope, the differences can locally change sign. In addition, in a series measured at discrete time points, a change in sign must be used rather than a zero value as it may land in-between two time points.
+
+These data are measured under clear sky onditions and, thus, no cloud flecks are detected using the running differences method.
+
+Once denoised, changes in slope can be detected using `sign()` to discretize the data into values indicating decrease (-1) , no-change (0) and increase (+1).
+
+```{r}
+chunks_dn.ls <- 
+  denoise_chunk(chunks.ls, ignore.range = 0.005, add.signs = TRUE)
+```
+
+Subsequently, changes in solpe can be located using `rle()`. In this example all differences are smaller than 5 per thousand of the mean irradiance.
+
+```{r}
+rle(chunks_dn.ls[[1]][["PAR_Den_CS.sign"]])
+```
+
