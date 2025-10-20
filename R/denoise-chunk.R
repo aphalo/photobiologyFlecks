@@ -72,7 +72,7 @@ denoise_chunk <- function(data,
                                       data[[diff.col]],
                                       ignore.range = ignore.range)
     if (add.signs) {
-      data[[paste(qty.name, ".sign", sep = "")]] <- sign(data[[diff.col]])
+      data[[paste(qty.col, ".sign", sep = "")]] <- sign(data[[diff.col]])
     }
   }
   data

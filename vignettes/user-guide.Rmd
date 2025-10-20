@@ -7,6 +7,42 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+## Introduction
+
+At the moment this vignette has the double purpose of keeping track of my
+progress and testing the performance of the functions in the package. My aim
+is to analyse a large set of high frequency time series measurements of
+sunlight at seven different wavebands done with broadband sensors over one
+summer.
+
+The data set will be large with seven variables and a few hundred millions of
+time points. During daytime measurements were acquired in bursts of 18000 time
+points in 15 min every 30 min.
+
+The effect of clouds is intermitent and varies in intensity gradually. Using
+quantiles, mean, MAD and variance on the irradiance, and on the running
+differences is one possible aproach. However, a recent additional approach
+is based on detecting change points in the running differences as a basis to
+quantify the duration and amplitude of cloud/shade flecks.
+
+The data are in large text files saved with the software PC400 from Campbell
+Scientific, the supplier of the data logger used to collect the data set.
+
+The first step is to read-in the data and split it into "chunks" of data from
+18000 consecutive observations at the gaps between the "bursts" of observations,
+discarding any incomplete sets and any data measured at a lower frequency. At
+this stage running differences for time stamps need to be computed, and running
+differences for the measured variables can also be added at the same time.
+
+The smaller values in the running differences are most likely the result of
+measurement "noise" and could be "cleaned" before the next steps. The
+differences can be used directly or discretized based on their sign.
+
+## Current state
+
+The reading of the data from the 3.7GB text file into a tibble is the slowest
+step. Other computations are fast even with the functions are coded fully in R.
+
 ## Set up
 
 ```{r, include = FALSE}
@@ -17,6 +53,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
+library(tibble)
+library(dplyr)
 library(photobiologyInOut)
 library(photobiologyFlecks)
 ```
@@ -26,20 +64,32 @@ library(photobiologyFlecks)
 Read data from a CSV file as saved by Campbell Scientific's PC400 program containing data acquired with a CR6 data logger.
 
 ```{r}
-file.name <- "data-raw/Viikki Tower_TableMilliSecond.dat"
+# file.name <- "data-raw/Viikki Tower_TableMilliSecond.dat"
+file.name <- "F:\\aphalo\\research-data\\data-weather\\weather-viikki-field-2025\\data-logged\\data-2025-08-25\\TOA5_1449.TableMilliSecond.dat"
 file.size(file.name)
 file.mtime(file.name)
 ```
 
-The top `r 4 * 18e3` rows from a large file will be used in the examples.
+All rows from a large file will be used in the examples. Reading and decoding the text file is slow, so we create a temporary binary file and use it if it exists or create it after reading the text file if not. Reading from the temp file a 3.7GB tibble takes only about 10 s of both elapsed and user time while reading the DAT file takes nearly 450 s of elapsed time and 3600 s of user time on a computer with a 6 cores processors. The numbers do not add, so user time must be based on logical cores (12) with multithreading. Anyway, 240 s of system time, give 3820 of user + system time, indicating an average use of nearly 9 cores during 7 min 24 s.
 
 ```{r}
-# read four chucks of 18000 observations each
-four_chunks.tb <- read_csi_dat(file.name, n_max = 4 * 18000)
+temp_file.name <- "H:/data-temp/all-chunks-tb.rda"
 
-ncol(four_chunks.tb)
-colnames(four_chunks.tb)
-nrow(four_chunks.tb)
+system.time(
+  if (!file.exists(temp_file.name)) {
+    # read four chucks of 18000 observations each
+    all_chunks.tb <- 
+      read_csi_dat(file.name, n_max = Inf) |>
+      dplyr::select(-RECORD)
+    save(all_chunks.tb, file = temp_file.name)
+  } else {
+    load(temp_file.name)
+  }
+)
+ncol(all_chunks.tb)
+colnames(all_chunks.tb)
+nrow(all_chunks.tb)
+
 ```
 
 The time series data of sunligh have been measured in 15 min bursts separated by 15 min with no data acquisition. Data from each burst will be analysed separatey. For this the data frame will be split at the
@@ -48,17 +98,18 @@ breaks between bursts.
 ```{r}
 # keep all qty columns, add differences
 chunks.ls <-
-  split_chunks(four_chunks.tb,
-               qty.name = "PAR_Den_CS",
+  split_chunks(all_chunks.tb,
+               qty.name = NULL,
                step.len = 0.051,
-               verbose = TRUE)
+               chunk.min.rows = 1.8e4)
 ```
 
 Summary shows us a list of four data frames, more precisely, tibbles. Each tibble containing 4 columns.
 
-```{r}
+```{r, eval=FALSE}
 summary(chunks.ls)
 ```
+
 ```{r}
 str(chunks.ls[[1]], give.attr = FALSE)
 ```
@@ -67,6 +118,40 @@ str(chunks.ls[[1]], give.attr = FALSE)
 chunks_dn.ls <- denoise_chunk(chunks.ls, add.signs = TRUE) 
 ```
 
+
+## Summaries
+
+### Statistics
+
+```{r}
+statistics.ls <- list()
+for (i in names(chunks.ls)) {
+  temp.tb <- bind_rows(reframe(chunks.ls[[i]],
+                               across(where(is.numeric),
+                                      function(x) {quantile(x, na.rm = TRUE)})),
+                       summarise(chunks.ls[[i]],
+                                 across(where(is.numeric),
+                                        function(x) {mean(x, na.rm = TRUE)})),
+                       summarise(chunks.ls[[i]],
+                                 across(where(is.numeric),
+                                        function(x) {var(x, na.rm = TRUE)})),
+                       summarise(chunks.ls[[i]],
+                                 across(where(is.numeric),
+                                        function(x) {mad(x, na.rm = TRUE)})),
+                       summarise(chunks.ls[[i]],
+                                 across(where(is.numeric),
+                                        function(x) {sqrt(var(x, na.rm = TRUE)) /
+                                            mean(x, na.rm = TRUE)})),
+                                              summarise(chunks.ls[[i]],
+                                 across(where(is.numeric),
+                                        function(x) {mad(x, na.rm = TRUE) /
+                                            median(x, na.rm = TRUE)}))
+  )
+  temp.tb[["parameter"]] <- c("min","q.25", "median", "q.75", "max", "mean", "var", "mad", "CV", "CVmad")
+  statistics.ls[[i]] <- temp.tb
+}
+length(statistics.ls)
+```
 
 ## Locating change points
 
@@ -80,12 +165,20 @@ Once denoised, changes in slope can be detected using `sign()` to discretize the
 
 ```{r}
 chunks_dn.ls <- 
-  denoise_chunk(chunks.ls, ignore.range = 0.005, add.signs = TRUE)
+  denoise_chunk(chunks.ls, ignore.range = 0.1, add.signs = TRUE)
 ```
 
-Subsequently, changes in solpe can be located using `rle()`. In this example all differences are smaller than 5 per thousand of the mean irradiance.
+
+### Change points
+
+Subsequently, changes in slope can be located using `rle()`. In this example all differences are smaller than 5 per thousand of the mean irradiance.
 
 ```{r}
-rle(chunks_dn.ls[[1]][["PAR_Den_CS.sign"]])
+sign_changes.ls <- list()
+for (i in names(chunks_dn.ls)) {
+  sign_changes.ls[[i]] <- 
+    list(rle = rle(chunks_dn.ls[[i]][["PAR_Den_CS.sign"]]))
+}
+length(sign_changes.ls)
 ```
 
