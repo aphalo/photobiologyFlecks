@@ -2,6 +2,7 @@ Package: photobiologyFlecks
 Type: Package
 Title: Analysis of sun- and shade flecks
 Version: 0.1.0
+Date: 2025-10-22
 Authors@R: c(
     person("Pedro J.", "Aphalo", 
            email = "pedro.aphalo@helsinki.fi", 
