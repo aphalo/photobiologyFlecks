@@ -57,6 +57,7 @@ library(tibble)
 library(dplyr)
 library(photobiologyInOut)
 library(photobiologyFlecks)
+library(ggplot2)
 ```
 
 # Read data
@@ -92,65 +93,39 @@ nrow(all_chunks.tb)
 
 ```
 
-The time series data of sunligh have been measured in 15 min bursts separated by 15 min with no data acquisition. Data from each burst will be analysed separatey. For this the data frame will be split at the
-breaks between bursts.
+The time series data of sunlight have been measured in 15-min-long bursts separated by 15 min with no data acquisition. Data from each burst will be analysed separately. For this the data frame has to be split at the gaps between bursts.
 
 ```{r}
-# keep all qty columns, add differences
-chunks.ls <-
-  split_chunks(all_chunks.tb,
-               qty.name = NULL,
-               step.len = 0.051,
-               chunk.min.rows = 1.8e4)
-```
-
-Summary shows us a list of four data frames, more precisely, tibbles. Each tibble containing 4 columns.
-
-```{r, eval=FALSE}
-summary(chunks.ls)
+system.time(
+  # keep all qty columns, add differences
+  chunks.ls <-
+    split_chunks(all_chunks.tb,
+                 qty.name = NULL,
+                 step.len = 0.051,
+                 chunk.min.rows = 1.8e4)
+)
 ```
 
 ```{r}
 str(chunks.ls[[1]], give.attr = FALSE)
 ```
 
-```{r}
-chunks_dn.ls <- denoise_chunk(chunks.ls, add.signs = TRUE) 
-```
-
-
 ## Summaries
 
 ### Statistics
 
 ```{r}
-statistics.ls <- list()
-for (i in names(chunks.ls)) {
-  temp.tb <- bind_rows(reframe(chunks.ls[[i]],
-                               across(where(is.numeric),
-                                      function(x) {quantile(x, na.rm = TRUE)})),
-                       summarise(chunks.ls[[i]],
-                                 across(where(is.numeric),
-                                        function(x) {mean(x, na.rm = TRUE)})),
-                       summarise(chunks.ls[[i]],
-                                 across(where(is.numeric),
-                                        function(x) {var(x, na.rm = TRUE)})),
-                       summarise(chunks.ls[[i]],
-                                 across(where(is.numeric),
-                                        function(x) {mad(x, na.rm = TRUE)})),
-                       summarise(chunks.ls[[i]],
-                                 across(where(is.numeric),
-                                        function(x) {sqrt(var(x, na.rm = TRUE)) /
-                                            mean(x, na.rm = TRUE)})),
-                                              summarise(chunks.ls[[i]],
-                                 across(where(is.numeric),
-                                        function(x) {mad(x, na.rm = TRUE) /
-                                            median(x, na.rm = TRUE)}))
-  )
-  temp.tb[["parameter"]] <- c("min","q.25", "median", "q.75", "max", "mean", "var", "mad", "CV", "CVmad")
-  statistics.ls[[i]] <- temp.tb
-}
-length(statistics.ls)
+system.time(
+  statistics.tb <- chunk_summary(chunks.ls, add.times = TRUE)
+)
+```
+
+```{r}
+statistics.tb |>
+  select(time, PAR_Den_CS, parameter) |>
+ggplot(aes(time, PAR_Den_CS)) +
+  geom_point(size = 0.1) +
+  facet_wrap(facets = vars(parameter), scales = "free_y")
 ```
 
 ## Locating change points
