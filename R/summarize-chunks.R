@@ -3,7 +3,7 @@
 #' Compute statistical summaries for each numeric variable in a time series
 #' chunk or in a list of time series chunks.
 #'
-#' @param x a named list of data frames.
+#' @param l a named list of data frames.
 #' @param FUN function The function used to compute the summary of a numeric
 #'   vector.
 #' @param parameter.names The names used to identify the members of the vector
@@ -46,15 +46,15 @@
 #'
 #' @export
 #'
-chunk_summary <- function(l,
-                          FUN = tb_summary,
-                          parameter.names = FUN(NULL, return.names = TRUE),
-                          add.times = FALSE,
-                          tz = "UTC",
-                          time.shift = 0,
-                          add.solar.times = add.times && !is.null(geocode),
-                          geocode = NULL,
-                          verbose = FALSE) {
+summarize_chunks <- function(l,
+                             FUN = summarize_chunk,
+                             parameter.names = FUN(NULL, return.names = TRUE),
+                             add.times = FALSE,
+                             tz = "UTC",
+                             time.shift = 0,
+                             add.solar.times = add.times && !is.null(geocode),
+                             geocode = NULL,
+                             verbose = FALSE) {
   if (is.data.frame(l)) {
     l <- list(chunk = l)
     add.times <- FALSE
@@ -101,17 +101,18 @@ chunk_summary <- function(l,
   z
 }
 
-#' @rdname chunk_summary
+#' @rdname summarize_chunks
 #'
 #' @param x numeric vector.
 #' @param return.names logical Return the names of the parameters as a character
 #'   vector instead of the computed numeric values.
 #'
-#' @return A numeric vector of length 9.
+#' @return A numeric vector of length ten, or a character vector of the same
+#'   length.
 #'
 #' @export
 #'
-tb_summary <- function(x, return.names = FALSE) {
+summarize_chunk <- function(x, return.names = FALSE) {
   if (return.names) {
     return(c("min","q.25", "median", "q.75", "max",
              "mean", "sd", "mad", "CVsd", "CVmad"))

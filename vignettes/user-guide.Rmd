@@ -61,9 +61,9 @@ library(photobiologyFlecks)
 library(ggplot2)
 ```
 
-# Read data
+## Read raw data
 
-Read data from a CSV file as saved by Campbell Scientific's PC400 program containing data acquired with a CR6 data logger.
+Read data from a CSV file as saved by Campbell Scientific's PC400 program containing data acquired with a CR6 data logger. These data are not calibrated!
 
 ```{r}
 # file.name <- "data-raw/Viikki Tower_TableMilliSecond.dat"
@@ -80,7 +80,7 @@ nchunks <- Inf
 temp_file.name <- "H:/data-temp/all-chunks-tb.rda"
 ```
 
-All rows from a large file will be used in the examples. Reading and decoding the text file is slow, so we create a temporary binary file and use it if it exists or create it after reading the text file if not. Reading from the temp file a 3.7GB tibble takes only about 10 s of both elapsed and user time while reading the DAT file takes nearly 450 s of elapsed time and 3600 s of user time on a computer with a 6 cores processors. The numbers do not add, so user time must be based on logical cores (12) with multithreading. Anyway, 240 s of system time, give 3820 of user + system time, indicating an average use of nearly 9 cores during 7 min 24 s.
+All rows from a large file will be used in the examples. Reading and decoding the text file is slow, so we create a temporary binary file and use it if it exists or create it after reading the text file if not. Reading from the temp file a 3.7GB tibble takes only about 10 s of both elapsed and user time while reading the DAT file takes nearly 450 s of elapsed time and 3600 s of user time on a computer with a 6 cores processors. The numbers do not add, so user time must be based on logical cores (12) with multi-threading. Anyway, 240 s of system time, give 3820 of user + system time, indicating an average use of nearly 9 cores during 7 min 24 s.
 
 ```{r}
 system.time(
@@ -93,11 +93,35 @@ system.time(
     load(temp_file.name)
   }
 )
+
 ncol(all_chunks.tb) # all chunks read
 colnames(all_chunks.tb)
 nrow(all_chunks.tb)
-
 ```
+
+## Load calibrated data
+
+CURRENTLY SKIPPED
+
+```{r, eval=FALSE}
+rm(all_chunks.tb)
+```
+
+Read data from a CSV file as saved by Campbell Scientific's PC400 program containing data acquired with a CR6 data logger. These data are not calibrated!
+
+```{r, eval=FALSE}
+# file.name <- "data-raw/Viikki Tower_TableMilliSecond.dat"
+file.name <- "F:\\aphalo\\research-data\\data-weather\\weather-viikki-field-2025\\data-logged\\data-2025-08-25\\TOA5_1449.TableMilliSecond.dat"
+file.size(file.name)
+file.mtime(file.name)
+```
+
+```{r, eval=FALSE}
+infoRDS(file.name)
+all_chunks.tb <- readRDS(file.name)
+```
+
+## Split data into chunks
 
 The time series data of sunlight have been measured in 15-min-long bursts separated by 15 min with no data acquisition. Data from each burst will be analysed separately. For this the data frame has to be split at the gaps between bursts.
 
@@ -128,19 +152,20 @@ str(chunks.ls[[1]], give.attr = FALSE)
 
 ### Statistics
 
-Something seems wrong as I expect a 1 h shift to be needed!
+Something seems wrong as I expect a 1 h time shift to be needed!
 
 ```{r}
 system.time(
   statistics.tb <- 
-    chunk_summary(chunks.ls, 
-                  add.times = TRUE, 
-                  tz = "EET",
-                  time.shift = 0,
-                  add.solar.times = TRUE,
-                  geocode = data.frame(lon = 25.019212, lat = 60.226805),
-                  verbose = FALSE)
+    summarize_chunks(chunks.ls, 
+                     add.times = TRUE, 
+                     tz = "EET",
+                     time.shift = 0,
+                     add.solar.times = TRUE,
+                     geocode = data.frame(lon = 25.019212, lat = 60.226805),
+                     verbose = FALSE)
 )
+save(statistics.tb, file = gsub("\\.[rR]da$", ".summaries.rda", temp_file.name))
 ```
 
 ```{r}
@@ -164,16 +189,16 @@ statistics.tb |>
   filter(parameter == "mean") |>
 ggplot(aes(as_tod(time), PAR_Den_CS)) +
   geom_point(size = 0.1) +
-  facet_wrap(facets = vars(date), scales = "free_y")
+  facet_wrap(facets = vars(date))
 ```
 
 ```{r}
 statistics.tb |>
-  select(solar.time, date, PAR_Den_CS, parameter) |>
+  select(solar.time, date, UVBf_Den, parameter) |>
   filter(parameter == "mean") |>
-ggplot(aes(solar.time, PAR_Den_CS)) +
+ggplot(aes(solar.time, UVBf_Den)) +
   geom_point(size = 0.1) +
-  facet_wrap(facets = vars(date), scales = "free_y")
+  facet_wrap(facets = vars(date))
 ```
 
 ```{r}
@@ -182,7 +207,7 @@ statistics.tb |>
   filter(parameter == "CVsd") |>
 ggplot(aes(as_tod(time), PAR_Den_CS)) +
   geom_point(size = 0.1) +
-  facet_wrap(facets = vars(date), scales = "free_y")
+  facet_wrap(facets = vars(date))
 ```
 
 ## Locating change points
@@ -191,14 +216,12 @@ ggplot(aes(as_tod(time), PAR_Den_CS)) +
 
 In a series without noise, the running difference is equal to zero at the point where the slope changes sign. In a noisy series, even without a consistent change in slope, the differences can locally change sign. In addition, in a series measured at discrete time points, a change in sign must be used rather than a zero value as it may land in-between two time points.
 
-These data are measured under clear sky onditions and, thus, no cloud flecks are detected using the running differences method.
-
-Once denoised, changes in slope can be detected using `sign()` to discretize the data into values indicating decrease (-1) , no-change (0) and increase (+1).
+Once de-noised, changes in slope can be detected using `sign()` to discretize the data into values indicating decrease (-1) , no-change (0) and increase (+1).
 
 ```{r}
 system.time(
   chunks_dn.ls <- 
-    denoise_chunk(chunks.ls, ignore.range = 0.1, add.signs = TRUE)
+    denoise_chunks(chunks.ls, ignore.range = 0.1, add.signs = TRUE)
 )
 ```
 

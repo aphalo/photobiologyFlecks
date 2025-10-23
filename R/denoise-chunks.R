@@ -27,19 +27,19 @@
 #'
 #' @export
 #'
-#' @seealso \code{\link{denoise_diffs}()}, \code{\link{split_cunks}()} and
+#' @seealso \code{\link{denoise_diffs}()}, \code{\link{split_chunks}()} and
 #'   \code{\link{check_colnames}()}.
 #'
-denoise_chunk <- function(data,
-                          time.name = "TIMESTAMP",
-                          qty.name = NULL,
-                          ignore.range = 0.01,
-                          add.signs = FALSE,
-                          verbose = FALSE) {
+denoise_chunks <- function(data,
+                           time.name = "TIMESTAMP",
+                           qty.name = NULL,
+                           ignore.range = 0.01,
+                           add.signs = FALSE,
+                           verbose = FALSE) {
   if (!is.data.frame(data)) {
     if (is.list(data)) {
       z <- lapply(X = data,
-                  FUN = denoise_chunk,
+                  FUN = denoise_chunks,
                   time.name = time.name,
                   qty.name = qty.name,
                   ignore.range = ignore.range,
