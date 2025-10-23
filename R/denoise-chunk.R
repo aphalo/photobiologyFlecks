@@ -38,14 +38,14 @@ denoise_chunk <- function(data,
                           verbose = FALSE) {
   if (!is.data.frame(data)) {
     if (is.list(data)) {
-      return(
-        lapply(X = data,
-               FUN = denoise_chunk,
-               time.name = time.name,
-               qty.name = qty.name,
-               ignore.range = ignore.range,
-               add.signs = add.signs)
-      )
+      z <- lapply(X = data,
+                  FUN = denoise_chunk,
+                  time.name = time.name,
+                  qty.name = qty.name,
+                  ignore.range = ignore.range,
+                  add.signs = add.signs)
+      message("Denoised ", length(z), " chunks")
+      return(z)
     } else {
       stop("'data' must be a data.frame or a list of data.frames, not '",
            class(data)[1], "'")

@@ -31,6 +31,8 @@ to obtain the size of differences to ignore.}
 \item{add.signs}{logical Flag indicating if values returned by
 \code{\link{sign}()} on the de-noised differences are to be added to the
 returned data frame chunks.}
+
+\item{verbose}{logical Report data columns found. Useful for debugging.}
 }
 \description{
 Replace running differences smaller than a threshold by zeros in selected

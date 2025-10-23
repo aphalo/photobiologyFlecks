@@ -20,12 +20,16 @@ URL: https://docs.r4photobiology.info/photobiologyFlecks/
 BugReports: https://github.com/aphalo/photobiologyFlecks/issues/
 RoxygenNote: 7.3.3
 Requires:
-    R (>= 4.5.0)
+    R (>= 4.4.0)
 Imports:
     stats,
-    dplyr (>= 1.1.0)
+    dplyr (>= 1.1.0),
+    anytime (>= 0.3.10),
+    lubridate (>= 1.9.4),
+    SunCalcMeeus (>= 0.1.3)
 Suggests:
     ggplot2 (>= 3.5.0),
+    photobiologyInOut (>= 0.4.30),
     knitr,
     rmarkdown
 VignetteBuilder: knitr

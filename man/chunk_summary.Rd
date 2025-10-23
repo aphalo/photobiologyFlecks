@@ -5,23 +5,77 @@
 \alias{tb_summary}
 \title{Chunk summaries}
 \usage{
-chunk_summary(l, add.times = FALSE, tz = "UTC")
+chunk_summary(
+  l,
+  FUN = tb_summary,
+  parameter.names = FUN(NULL, return.names = TRUE),
+  add.times = FALSE,
+  tz = "UTC",
+  time.shift = 0,
+  add.solar.times = add.times && !is.null(geocode),
+  geocode = NULL,
+  verbose = FALSE
+)
 
-tb_summary(x)
+tb_summary(x, return.names = FALSE)
 }
 \arguments{
+\item{FUN}{function The function used to compute the summary of a numeric
+vector.}
+
+\item{parameter.names}{The names used to identify the members of the vector
+returned by \code{FUN}.}
+
 \item{add.times}{logical If \code{TRUE}, list names are converted into
-\code{POSIX.ct} values and added in a column named \code{time}.}
+\code{POSIX.ct} and \code{Date} values and added in columns named
+\code{time} and \code{date}.}
 
 \item{tz}{character The time zone used to decode times.}
 
+\item{time.shift}{numeric A time shift expressed in hours. Only needed if
+original times do not match those at the time zone passed as argument
+to \code{tz},}
+
+\item{add.solar.times}{logical If \code{TRUE}, add local solar time in
+column \code{solar.time} in addition to \code{time} and \code{date}.}
+
+\item{geocode}{A one row \code{data.frame} with columns \code{lat} and
+\code{lon} with geographical coordinates as numeric values in degrees
+W and N.}
+
+\item{verbose}{logical Report chunk names while walking through \code{l}.
+Useful for debugging.}
+
 \item{x}{numeric vector.}
+
+\item{return.names}{logical Return the names of the parameters as a character
+vector instead of the computed numeric values.}
 }
 \value{
+A tibble with 10 rows for each chunk in the input, with one summary
+per row and one column for each numeric column in the chunks with their
+original names plus columns \code{chunk} and \code{parameter}, and
+if requested columns \code{time}, \code{date} and \code{solar.time} added.
+
 A numeric vector of length 9.
 }
 \description{
 Compute statistical summaries for each numeric variable in a time series
 chunk or in a list of time series chunks.
 }
-\keyword{internal}
+\details{
+A fixed set of summaries is computed for each numeric variable in a chunk
+and indexed by additional columns \code{parameter} and \code{chunk}.
+
+If \code{add.times == TRUE} and the names in \code{l} are strings describing
+instants in time, they are decoded using functions
+\code{\link[anytime]{anytime}()} and \code{\link[anytime]{anydate}()} and
+added as columns \code{time} and \code{date}. If the argument passed to
+\code{l} was the list returned by
+\code{\link[photobiologyFlecks]{split_chunks}()} the times and
+dates match those of the first time point in each chunks.
+
+An argument passed to \code{time.shift} can be used to correct a consistent
+error in times such as a badly set clock during acquisition or when data
+acquisition times have been in UTC plus a constant time shift year round.
+}

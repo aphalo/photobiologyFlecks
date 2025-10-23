@@ -8,6 +8,7 @@
 #' @param qty.name character vector Name(s) of variable(s) in \code{data}
 #'   containing values observed quantities. If \code{qty.name = NULL}, the
 #'   default, all columns are retained.
+#' @param verbose logical Report data columns found. Useful for debugging.
 #'
 #' @details If the column named according to \code{time.name} is not in
 #'   \code{col.names} an error is issued. If \code{qty.name = NULL} all

@@ -35,8 +35,8 @@ have not to be discarded.}
 \item{add.diffs}{logical Flag indicating if values returned by
 \code{\link{diff}()} are to be added to the returned data frame chunks.}
 
-\item{verbose}{logical Report progress by printing times at gaps and number
-of rows in each chunk.}
+\item{verbose}{logical Report chunk names and lengths at each iteration.
+Useful for debugging.}
 
 \item{na.rm}{logical Omit rows of \code{data} containing \code{NA} values
 after selecting variables.}

@@ -13,6 +13,8 @@ containing time stamps for the observations.}
 \item{qty.name}{character vector Name(s) of variable(s) in \code{data}
 containing values observed quantities. If \code{qty.name = NULL}, the
 default, all columns are retained.}
+
+\item{verbose}{logical Report data columns found. Useful for debugging.}
 }
 \description{
 Check that names passed as arguments for columns containing time stamps and

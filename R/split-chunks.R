@@ -16,6 +16,8 @@
 #'   of rows in each chunk.
 #' @param na.rm logical Omit rows of \code{data} containing \code{NA} values
 #'   after selecting variables.
+#' @param verbose logical Report chunk names and lengths at each iteration.
+#'   Useful for debugging.
 #'
 #' @details When time series of data are acquired in bursts or chunks separated
 #'   by longer time intervals it can be useful to extract the chunks into
@@ -72,12 +74,8 @@ split_chunks <-
                                qty.name = qty.name)
     data <- data[ , c(time.name, qty.name)]
     if (na.rm) {
-      data <- na.omit(data)
+      data <- stats::na.omit(data)
     }
-    # if (nrow(data) < 3L) {
-    #   warning("Found no chunks! Aborted as 'data' contains fewer than 3 rows.")
-    #   return(list())
-    # }
 
     # find discontinuities in the time vector
     time.diffs <- diff(data[[time.name]])
@@ -106,13 +104,13 @@ split_chunks <-
       member.name <- as.character(temp.tb[[time.name]][1])
       if (nrow(temp.tb) >= chunk.min.rows) {
         if (verbose) {
-          cat("Keep. Chunk '", member.name, "' with length ",
+          cat("Kept. Chunk '", member.name, "' with length ",
               nrow(temp.tb), "\n", sep = "")
         }
         chunks.ls[[member.name]] <- temp.tb
       } else {
         if (verbose) {
-          cat("Skip! Chunk '", member.name, "' with length ",
+          cat("Dropped! Short chunk '", member.name, "' with length ",
               nrow(temp.tb), "\n", sep = "")
         }
       }
