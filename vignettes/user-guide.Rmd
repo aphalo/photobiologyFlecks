@@ -80,7 +80,7 @@ nchunks <- Inf
 temp_file.name <- "H:/data-temp/all-chunks-tb.rda"
 ```
 
-All rows from a large file will be used in the examples. Reading and decoding the text file is slow, so we create a temporary binary file and use it if it exists or create it after reading the text file if not. Reading from the temp file a 3.7GB tibble takes only about 10 s of both elapsed and user time while reading the DAT file takes nearly 450 s of elapsed time and 3600 s of user time on a computer with a 6 cores processors. The numbers do not add, so user time must be based on logical cores (12) with multi-threading. Anyway, 240 s of system time, give 3820 of user + system time, indicating an average use of nearly 9 cores during 7 min 24 s.
+All rows from a large file will be used in the examples. Reading and decoding the text file is slow, so we create a temporary binary file and use it if it exists or create it after reading the text file if not. Reading from the temp file a 3.7GB tibble takes only about 10 s of both elapsed and user time while reading the DAT file takes nearly 450 s of elapsed time and 3600 s of user time on a computer with a processor with 6 physical cores (12 logical ones). The numbers do not add, so user time must be based on logical cores (12) with multi-threading. Anyway, 240 s of system time, give 3820 of user + system time, indicating an average use of nearly 9 cores during 7 min 24 s.
 
 ```{r}
 system.time(
@@ -214,6 +214,8 @@ ggplot(aes(as_tod(time), PAR_Den_CS)) +
 
 ### Using `diff()`
 
+Running differences after slight denoising can be used to detect changes in the sign of the local slope, the peaks and valleys of a time series. In other words, the flecks are identified based on local maxima and minima.
+
 In a series without noise, the running difference is equal to zero at the point where the slope changes sign. In a noisy series, even without a consistent change in slope, the differences can locally change sign. In addition, in a series measured at discrete time points, a change in sign must be used rather than a zero value as it may land in-between two time points.
 
 Once de-noised, changes in slope can be detected using `sign()` to discretize the data into values indicating decrease (-1) , no-change (0) and increase (+1).
@@ -225,9 +227,6 @@ system.time(
 )
 ```
 
-
-### Change points
-
 Subsequently, changes in slope can be located using `rle()`. In this example all differences are smaller than 5 per thousand of the mean irradiance.
 
 ```{r}
@@ -238,4 +237,20 @@ for (i in names(chunks_dn.ls)) {
 }
 length(sign_changes.ls)
 ```
+
+### Using a reference
+
+Instead of detecting sunflecks as a dynamic temporal process, or local changes in slope, especially in the case of cloud flecks an alternative is to use the estimated clear-sky irradiance as reference and to quantify the size of the deviations, both increases and decreases, in many cases using a fixed threshold. An alternative to using a clear sky simulation is to use a smoothed version of the same data as a reference, a moving median, a sline-based smoother. However, each of these and the temporal-process approach described above are fundamentally different and describe different properties of the data.
+
+Both observed and reference irradiances need to be available at the same time points. This in some cases can make it necesary to use interpolation to obtain suitable reference data. After this, a simple difference at each time point can be computed and compared against a threshold. As the reference varies in time, the threshold used can expressed either as an absolute difference or as a relative difference, thus, giving two different possible quantifications.
+
+### Using a quantile smoother
+
+Quantile regression, either of a linear model or a smmothing spline, differs from OLS regression and other common approaches in that it can flexibly be used to find a fitted line that describes a specific quantile. It can be imagined as a combination of a boxplot and a smoother. This approach lets us estimate local deviations from an internal reference different from the local mean or median, say, for example, to identify when irradiance is less than that in the 10% locally highest irradiances.
+
+
+
+
+
+ For vegetation shade a further possibility is to use a quantile regression directly fitted for a target shade threshold.
 
