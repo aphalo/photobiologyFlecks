@@ -33,7 +33,7 @@
 #' added as columns \code{time} and \code{date}. If the argument passed to
 #' \code{l} was the list returned by
 #' \code{\link[photobiologyFlecks]{split_chunks}()} the times and
-#' dates match those of the first time point in each chunks.
+#' dates match those of the first time point in each chunk.
 #'
 #' An argument passed to \code{time.shift} can be used to correct a consistent
 #' error in times such as a badly set clock during acquisition or when data
