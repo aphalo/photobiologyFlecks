@@ -76,3 +76,8 @@ checked once more, and trimming is reversed if conditions are not passed
 anymore. Finally, log the fleck in a table returned at the end. At the end,
 remove flecks overlapping, and calculate interval in time between two flecks.
 }
+\references{
+Durand M, Matule B, Burgess AJ, Robson TM. 2021. Sunfleck properties from
+  time series of fluctuating light. *Agricultural and Forest Meteorology*
+  **308-309**, 108554. \doi{10.1016/j.agrformet.2021.108554}
+}

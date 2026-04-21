@@ -1,8 +1,8 @@
 ---
-title: "User Guide"
+title: "User Guide: 1 Pre-processing"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{User Guide}
+  %\VignetteIndexEntry{User Guide: 1 Pre-processing}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

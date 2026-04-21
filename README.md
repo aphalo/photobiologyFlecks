@@ -3,12 +3,16 @@
 
 <!-- badges: start -->
 
-[![Documentation](https://img.shields.io/badge/documentation-photobiology-informational.svg)](https://docs.r4photobiology.info/photobiologyFlecks/)
+[![R Universe
+version](https://aphalo.r-universe.dev/badges/photobiologyFlecks)](https://aphalo.r-universe.dev/photobiologyFlecks)
+[![R build
+status](https://github.com/aphalo/photobiologyFlecks/workflows/R-CMD-check/badge.svg)](https://github.com/aphalo/photobiologyFlecks/actions)
+[![Documentation](https://img.shields.io/badge/documentation-photobiologyFlecks-informational.svg)](https://docs.r4photobiology.info/photobiologyFlecks/)
 <!-- badges: end -->
 
 Package ‘**photobiologyFlecks**’ it is at a very early stage of
-development. Thus, it is icomplete, subject to changes and not yet very
-useful.
+development. **This package is incomplete, subject to changes and
+possibly useful.**
 
 The package attempts to facilitate the analysis of time series of
 irregulary varying irradiance data. It will support of fragmented time
@@ -42,10 +46,9 @@ Installation of the current unstable version from R-Universe CRAN-like
 repository:
 
 ``` r
-# NOT IN R-UNIVERSE
-# install.packages('photobiology', 
-#                  repos = c('https://aphalo.r-universe.dev', 
-#                            'https://cloud.r-project.org'))
+install.packages('photobiologyFlecks', 
+                 repos = c('https://aphalo.r-universe.dev', 
+                           'https://cloud.r-project.org'))
 ```
 
 The two approaches above, automatically install dependencies.
@@ -58,41 +61,15 @@ devtools::install_github("aphalo/photobiologyFlecks")
 ```
 
 Installation from GitHub sources does not automatically install
-dependencies. Once package ‘photobiology’ is installed, installation of
-the remaining or missing packages in the suite from CRAN (or by adding
-the repository information as above, also from R-Universe):
-
-``` r
-intalled_pkgs <- installed.packages()[ , 1]
-missing_pkgs <- setdiff(photobiology::r4p_pkgs, intalled_pkgs)
-if (length(missing_pkgs) > 0) {
- install.packages(missing_pkgs)
-}
-```
+dependencies. Once package ‘photobiologyFlecks’ is installed,
+installation of the remaining or missing packages from CRAN should be
+done manually.
 
 ## Documentation
 
 HTML documentation is available at
 (<https://docs.r4photobiology.info/photobiologyFlecks/>), including an
 *User Guide*.
-
-Two articles introduce the basic ideas behind the design of the suite
-and describe its use: Aphalo P. J. (2015)
-(<https://doi.org/10.19232/uv4pb.2015.1.14>) and Aphalo P. J. (2016)
-(<https://doi.org/10.19232/uv4pb.2016.1.15>).
-
-A book is under preparation, and the draft is currently available at
-(<https://leanpub.com/r4photobiology/>).
-
-A handbook written before the suite was developed contains useful
-information on the quantification and manipulation of ultraviolet and
-visible radiation: Aphalo, P. J., Albert, A., Björn, L. O., McLeod, A.
-R., Robson, T. M., & Rosenqvist, E. (Eds.) (2012) Beyond the Visible: A
-handbook of best practice in plant UV photobiology (1st ed., p. xxx +
-174). Helsinki: University of Helsinki, Department of Biosciences,
-Division of Plant Biology. ISBN 978-952-10-8363-1 (PDF),
-978-952-10-8362-4 (paperback). PDF file available from
-(<https://hdl.handle.net/10138/37558>).
 
 ## References
 
@@ -115,15 +92,15 @@ publications, please cite according to:
 citation("photobiologyFlecks")
 #> To cite package 'photobiologyFlecks' in publications use:
 #> 
-#>   Aphalo P (2026). _photobiologyFlecks: Analysis of sun- and shade
-#>   flecks_. R package version 0.0.0.9000,
+#>   Aphalo P, Durand M (2026). _photobiologyFlecks: Analysis of sun- and
+#>   shade flecks_. R package version 0.0.0.9000,
 #>   <https://docs.r4photobiology.info/photobiologyFlecks/>.
 #> 
 #> A BibTeX entry for LaTeX users is
 #> 
 #>   @Manual{,
 #>     title = {photobiologyFlecks: Analysis of sun- and shade flecks},
-#>     author = {Pedro J. Aphalo},
+#>     author = {Pedro J. Aphalo and Maxime Durand},
 #>     year = {2026},
 #>     note = {R package version 0.0.0.9000},
 #>     url = {https://docs.r4photobiology.info/photobiologyFlecks/},
@@ -132,6 +109,5 @@ citation("photobiologyFlecks")
 
 ## License
 
-© 2025 Pedro J. Aphalo (<pedro.aphalo@helsinki.fi>). Released under the
-GPL, version 2 or greater. This software carries no warranty of any
-kind.
+© 2020-2026 Maxime Durand and Pedro J. Aphalo. Released under the GPL,
+version 2 or greater. This software carries no warranty of any kind.

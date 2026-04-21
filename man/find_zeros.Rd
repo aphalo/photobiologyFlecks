@@ -33,3 +33,8 @@ the numerical derivative is calculated using \code{\link{calDev}()} and each seq
 timepoint of the numerical derivative is multiplied. When the results is
 negative, the time-series crosses zero.
 }
+\references{
+Durand M, Matule B, Burgess AJ, Robson TM. 2021. Sunfleck properties from
+  time series of fluctuating light. *Agricultural and Forest Meteorology*
+  **308-309**, 108554. \doi{10.1016/j.agrformet.2021.108554}
+}

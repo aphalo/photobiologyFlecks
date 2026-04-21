@@ -1,4 +1,55 @@
-url: ~
+destination: ../docs/photobiologyFlecks
+url: https://docs.r4photobiology.info/photobiologyFlecks/
+
 template:
   bootstrap: 5
 
+reference:
+  - title: Package overview
+    contents:
+    - "photobiologyFlecks-package"
+  - title: Data pre-processing and exploration
+    contents:
+    - denoise_chunks
+    - split_chunks
+    - summarize_chunks
+  - title: Characterization of light flecks
+    contents:
+    - find_zeros
+    - find_flecks
+  - title: Plotting and reporting
+    contents:
+    - combine_integ
+    - plot_ts_fleck
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, tutorials, news]
+    right: [search, github]
+  components:
+    intro:
+      icon: fas fa-home fa-lg
+      href: index.html
+      aria-label: Home
+    reference:
+      text: Reference
+      href: reference/index.html
+    news:
+      text: Changelog
+      href: news/index.html
+    articles:
+      text: User Guide
+      menu:
+      - text: '0 The R for Photobiology Suite'
+        href: articles/r4p-introduction.html
+      - text: '1 Characterization of light flecks'
+        href: articles/user-guide.html
+    tutorials:
+      text: Resources
+      menu:
+      - text: R for Photobiology web site
+        href: https://www.r4photobiology.info/
+      - text: A handbook of methods
+        href: https://doi.org/10.31885/9789521083631
+      - text: Photobiological Sciences Online
+        href: http://photobiology.info/

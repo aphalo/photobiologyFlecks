@@ -8,6 +8,12 @@
 #' using functions from 'graphics' package. Function \code{plot_ts_fleck_ez()}
 #' is simpler than  \code{plot_ts_fleck()}.
 #'
+#' @references
+#'
+#' Durand M, Matule B, Burgess AJ, Robson TM. 2021. Sunfleck properties from
+#'   time series of fluctuating light. *Agricultural and Forest Meteorology*
+#'   **308-309**, 108554. \doi{10.1016/j.agrformet.2021.108554}
+#'
 #' @export
 #'
 plot_ts_fleck <- function(time,
