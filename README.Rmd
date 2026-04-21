@@ -17,10 +17,10 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R Universe version](https://aphalo.r-universe.dev/badges/photobiologyFlecks)](https://aphalo.r-universe.dev/photobiologyFlecks)
-[![R build status](https://github.com/aphalo/photobiologyFlecks/workflows/R-CMD-check/badge.svg)](https://github.com/aphalo/photobiologyFlecks/actions)
+[![R-CMD-check](https://github.com/aphalo/photobiologyFlecks/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/aphalo/photobiologyFlecks/actions/workflows/R-CMD-check.yaml)
 [![Documentation](https://img.shields.io/badge/documentation-photobiologyFlecks-informational.svg)](https://docs.r4photobiology.info/photobiologyFlecks/)
 <!-- badges: end -->
-  
+
 Package '**photobiologyFlecks**' it is at a very early stage of development. **This package is incomplete, subject to changes and possibly useful.**
 
 The package attempts to facilitate the analysis of time series of irregulary varying irradiance data. It will support of fragmented time series were data acquisition takes place at high frequency during bursts separated by gaps with no data. As my own data consist in some cases in multivariate time series with several millions of observations grouped in bursts of tenths of thousands, I aim at efficient code. As a personal challenge, I aim to see if this is possible using pure R code with well know packages.

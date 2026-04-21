@@ -1,14 +1,14 @@
 #' Find flecks
 #'
 #' Detects flecks from time series and zero vector returned by
-#' \code{link{find_zeroes}(()}.
+#' \code{\link{find_zeroes}(()}.
 #'
 #' @details A sunfleck is caracterized by an increased followed by a decrease.
 #' Function search zero vector for such events. Once found, checks for asymetry
 #' between baselines. If found, tries to extend baseline a bit. If still
-#' asymeric, behaviour is as defined by \code{asm_method()}. Then fleck is
+#' asymeric, behaviour is as defined by \code{asmMethod}. Then fleck is
 #' checks for criteria as defined by \code{minTime}, \code{minAmp} and
-#' \code{minPdiff()}. If passed, the baselines are trimmed. Conditions are
+#' \code{minPdiff}. If passed, the baselines are trimmed. Conditions are
 #' checked once more, and trimming is reversed if conditions are not passed
 #' anymore. Finally, log the fleck in a table returned at the end. At the end,
 #' remove flecks overlapping, and calculate interval in time between two flecks.
@@ -29,23 +29,25 @@
 #' @param trimCV Control trimming threshold. Fleck baselines are trimmed
 #'   iteratively based on the coefficient of variation between two points  at
 #'   each baseline side.
-#' @param asmMethod character One of ["mean", "max", "rm"]. Decides what to do
-#'   with asymetric flecks `mean` averages the two baselines, `max` keeps the
-#'   largest baseline, `rm` discard the asymetric fleck.
+#' @param asmMethod character One of \code{"mean"}, \code{"max"}, \code{"rm"}.
+#'   Decides what to do with asymetric flecks \code{"mean"} averages the two
+#'   baselines, \code{"max"} keeps the largest baseline, \code{"rm"} discard the
+#'   asymetric fleck.
 #' @param bounds numeric vector of length 2 For relative amplitude calculations,
 #'   normalize between 0 and 1 by default.
 #' @param timeSplit integer Increase time-series data frequency by linear
 #'   interpolation. A value of 10 usually guarantee accuracy.
 #' @param shadeflecks logical If true, run the function in \emph{shadefleck}
-#' mode instead of in the default \emph{sunfleck} mode.
+#'   mode instead of in the default \emph{sunfleck} mode,
 #'   i.e., the function will find troughs instead of peaks in the data.
-#' @param verbose logical If true, provides more information while running.
+#' @param verbose logical If \code{TRUE}, provides more information while
+#'   running.
 #'
 #' @references
 #'
 #' Durand M, Matule B, Burgess AJ, Robson TM. 2021. Sunfleck properties from
-#'   time series of fluctuating light. *Agricultural and Forest Meteorology*
-#'   **308-309**, 108554. \doi{10.1016/j.agrformet.2021.108554}
+#'   time series of fluctuating light. \emph{Agricultural and Forest Meteorology}
+#'   \strong{308-309}, 108554. \doi{10.1016/j.agrformet.2021.108554}
 #'
 #' @export
 #'

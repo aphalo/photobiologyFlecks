@@ -5,8 +5,7 @@
 
 [![R Universe
 version](https://aphalo.r-universe.dev/badges/photobiologyFlecks)](https://aphalo.r-universe.dev/photobiologyFlecks)
-[![R build
-status](https://github.com/aphalo/photobiologyFlecks/workflows/R-CMD-check/badge.svg)](https://github.com/aphalo/photobiologyFlecks/actions)
+[![R-CMD-check](https://github.com/aphalo/photobiologyFlecks/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/aphalo/photobiologyFlecks/actions/workflows/R-CMD-check.yaml)
 [![Documentation](https://img.shields.io/badge/documentation-photobiologyFlecks-informational.svg)](https://docs.r4photobiology.info/photobiologyFlecks/)
 <!-- badges: end -->
 
