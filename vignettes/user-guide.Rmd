@@ -223,7 +223,7 @@ Once de-noised, changes in slope can be detected using `sign()` to discretize th
 ```{r}
 system.time(
   chunks_dn.ls <- 
-    denoise_chunks(chunks.ls, ignore.range = 0.1, add.signs = TRUE)
+    denoise_chunks(chunks.ls, relative.threshold = 0.1, add.signs = TRUE)
 )
 ```
 

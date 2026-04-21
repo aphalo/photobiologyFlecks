@@ -4,7 +4,13 @@
 \alias{denoise_diffs}
 \title{Denoise one vector of differences}
 \usage{
-denoise_diffs(x, x.diff, ignore.range = 0.01)
+denoise_diffs(
+  x,
+  x.diff,
+  absolute.threshold = 0,
+  relative.threshold = 0.05,
+  range.baseline = 0
+)
 }
 \arguments{
 \item{x}{numeric vector Supplying the range of data before computing
@@ -12,9 +18,30 @@ differences, or the data themselves.}
 
 \item{x.diff}{numeric vector The running differences to be de noised.}
 
-\item{ignore.range}{numeric The multiplier to apply to the spread of \code{x}
-to obtain the size of differences to ignore.}
+\item{absolute.threshold}{numeric The largest difference values to ignore,
+i.e., to set to zero.}
+
+\item{relative.threshold}{numeric The multiplier to apply to the spread of
+\code{x} to obtain the largest difference values to ignore, i.e., to set to
+zero.}
+
+\item{range.baseline}{numeric An additional value included in the computation
+of the range of the observations. Set \code{range.baseline = NA} for the
+spread applied to \code{relative.threshold} to be computed only based on
+the observations, set \code{range.baseline = 0} for the range to include
+zero, i.e., use a relative threshold relative to the maximum observation.}
+}
+\value{
+\code{denoise_diffs()} returns a \code{data.frame} that is a modified
+  copy of \code{data} with each column of differences named in
+  \code{qty.name}, if present, with differences smaller than the computed
+  minimum difference size threshold replaced by zeros.
 }
 \description{
-Denoise one vector of differences
+Internal "work function" used to implement the exported function
+\code{denoise_chunks()}.
 }
+\seealso{
+\code{\link{denoise_chunks}()}
+}
+\keyword{internal}

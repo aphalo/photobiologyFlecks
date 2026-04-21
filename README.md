@@ -76,9 +76,6 @@ HTML documentation is available at
 (<https://docs.r4photobiology.info/photobiologyFlecks/>), including an
 *User Guide*.
 
-News on updates to the different packages of the ‘r4photobiology’ suite
-are regularly posted at (<https://www.r4photobiology.info/>).
-
 Two articles introduce the basic ideas behind the design of the suite
 and describe its use: Aphalo P. J. (2015)
 (<https://doi.org/10.19232/uv4pb.2015.1.14>) and Aphalo P. J. (2016)
@@ -97,6 +94,13 @@ Division of Plant Biology. ISBN 978-952-10-8363-1 (PDF),
 978-952-10-8362-4 (paperback). PDF file available from
 (<https://hdl.handle.net/10138/37558>).
 
+## References
+
+Durand M, Matule B, Burgess AJ, Robson TM. 2021. Sunfleck properties
+from time series of fluctuating light. *Agricultural and Forest
+Meteorology* **308-309**, 108554. DOI:
+<https://doi.org/10.1016/j.agrformet.2021.108554>
+
 ## Contributing
 
 Pull requests, bug reports, and feature requests are welcome at
@@ -109,12 +113,10 @@ publications, please cite according to:
 
 ``` r
 citation("photobiologyFlecks")
-#> Warning in citation("photobiologyFlecks"): could not determine year for
-#> 'photobiologyFlecks' from package DESCRIPTION file
 #> To cite package 'photobiologyFlecks' in publications use:
 #> 
-#>   Aphalo P (????). _photobiologyFlecks: Analysis of sun- and shade
-#>   flecks_. R package version 0.1.0,
+#>   Aphalo P (2026). _photobiologyFlecks: Analysis of sun- and shade
+#>   flecks_. R package version 0.0.0.9000,
 #>   <https://docs.r4photobiology.info/photobiologyFlecks/>.
 #> 
 #> A BibTeX entry for LaTeX users is
@@ -122,7 +124,8 @@ citation("photobiologyFlecks")
 #>   @Manual{,
 #>     title = {photobiologyFlecks: Analysis of sun- and shade flecks},
 #>     author = {Pedro J. Aphalo},
-#>     note = {R package version 0.1.0},
+#>     year = {2026},
+#>     note = {R package version 0.0.0.9000},
 #>     url = {https://docs.r4photobiology.info/photobiologyFlecks/},
 #>   }
 ```

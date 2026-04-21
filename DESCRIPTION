@@ -2,12 +2,16 @@ Package: photobiologyFlecks
 Type: Package
 Title: Analysis of sun- and shade flecks
 Version: 0.0.0.9000
-Date: 2026-01-02
+Date: 2026-04-21
 Authors@R: c(
     person("Pedro J.", "Aphalo", 
            email = "pedro.aphalo@helsinki.fi", 
            role = c("aut", "cre"), 
-           comment = c(ORCID = "0000-0003-3385-972X"))
+           comment = c(ORCID = "0000-0003-3385-972X")),
+    person("Maxime", "Durand", 
+           email = "maxime.durand@universite-paris-saclay.fr", 
+           role = c("aut"), 
+           comment = c(ORCID = "0000-0002-8991-3601"))
     )
 Description: Functions for the analysis of time series of natural light 
     irradiance measured at high frequency. Denoising, and quantification of
@@ -22,7 +26,9 @@ RoxygenNote: 7.3.3
 Requires:
     R (>= 4.4.0)
 Imports:
+    utils,
     stats,
+    graphics,
     dplyr (>= 1.1.0),
     anytime (>= 0.3.10),
     lubridate (>= 1.9.4),
