@@ -65,7 +65,7 @@ running.}
 }
 \description{
 Detects flecks from time series and zero vector returned by
-\code{\link{find_zeroes}(()}.
+\code{\link{find_zeros}(()}.
 }
 \details{
 A sunfleck is caracterized by an increased followed by a decrease.

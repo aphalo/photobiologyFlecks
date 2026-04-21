@@ -21,6 +21,9 @@ reference:
     contents:
     - combine_integ
     - plot_ts_fleck
+  - title: Data used in examples
+    contents:
+    - three_chunks.tb
 
 navbar:
   structure:

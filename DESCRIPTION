@@ -19,6 +19,7 @@ Description: Functions for the analysis of time series of natural light
 License: GPL (>= 2)
 ByteCompile: true
 LazyLoad: true
+LazyData: true
 Encoding: UTF-8
 URL: https://docs.r4photobiology.info/photobiologyFlecks/
 BugReports: https://github.com/aphalo/photobiologyFlecks/issues/
@@ -41,3 +42,4 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Config/Needs/website: rmarkdown

@@ -8,3 +8,4 @@
 ^tests-offline
 ^README\.Rmd$
 ^\.github$
+^vignettes/articles$
