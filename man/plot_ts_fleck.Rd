@@ -2,12 +2,9 @@
 % Please edit documentation in R/plot-ts-fleck.R
 \name{plot_ts_fleck}
 \alias{plot_ts_fleck}
-\alias{plot_ts_fleck_ez}
 \title{Plot time series of all found flecks.}
 \usage{
 plot_ts_fleck(time, var, zeroes, fleck.data = FALSE, timeSplit = 10)
-
-plot_ts_fleck_ez(time, var, zeroes, fleck.data = FALSE, timeSplit = 10)
 }
 \arguments{
 \item{time}{numeric Vector of times from the time-series (\emph{x}-axis).}
