@@ -2,8 +2,6 @@ library(photobiologyFlecks)
 
 # Taken on 2021.07.17 in the oat fields of Helsinki university
 file.path <- system.file("extdata", "example-oat.csv", package = "photobiologyFlecks")
-# Read the file
-my_data <- read.csv(file_path)
 
 df <- read.csv(file.path, row.names = 1)
 
