@@ -19,9 +19,9 @@ The data set will be large with seven variables and a few hundred millions of
 time points. During daytime measurements were acquired in bursts of 18000 time
 points in 15 min every 30 min.
 
-The effect of clouds is intermitent and varies in intensity gradually. Using
+The effect of clouds is intermittent and varies in intensity gradually. Using
 quantiles, mean, MAD and variance on the irradiance, and on the running
-differences is one possible aproach. However, a recent additional approach
+differences is one possible approach. However, a recent additional approach
 is based on detecting change points in the running differences as a basis to
 quantify the duration and amplitude of cloud/shade flecks.
 
@@ -210,21 +210,64 @@ ggplot(aes(as_tod(time), PAR_Den_CS)) +
   facet_wrap(facets = vars(date))
 ```
 
+```{r}
+statistics.tb |>
+  select(solar.time, date, UVBf_Den, parameter) |>
+  filter(parameter == "median") |>
+ggplot(aes(solar.time, UVBf_Den)) +
+  geom_point(size = 0.1) +
+  facet_wrap(facets = vars(date))
+```
+
+```{r}
+statistics.tb |>
+  select(time, date, PAR_Den_CS, parameter) |>
+  filter(parameter == "CVmad") |>
+ggplot(aes(as_tod(time), PAR_Den_CS)) +
+  geom_point(size = 0.1) +
+  facet_wrap(facets = vars(date))
+```
+
+```{r}
+statistics.tb |>
+  select(solar.time, date, UVBf_Den, parameter) |>
+  filter(parameter == "max") |>
+ggplot(aes(solar.time, UVBf_Den)) +
+  geom_point(size = 0.1) +
+  facet_wrap(facets = vars(date))
+```
+
 ## Locating change points
 
 ### Using `diff()`
 
 Running differences after slight denoising can be used to detect changes in the sign of the local slope, the peaks and valleys of a time series. In other words, the flecks are identified based on local maxima and minima.
 
-In a series without noise, the running difference is equal to zero at the point where the slope changes sign. In a noisy series, even without a consistent change in slope, the differences can locally change sign. In addition, in a series measured at discrete time points, a change in sign must be used rather than a zero value as it may land in-between two time points.
-
-Once de-noised, changes in slope can be detected using `sign()` to discretize the data into values indicating decrease (-1) , no-change (0) and increase (+1).
+We use `relative.threshold = 0.20` $\mu mol\,m^{-2}\,s^{-2}$ as the minimum rate of change in irradiance per second to be considered relevant and not discarded as noise.
 
 ```{r}
 system.time(
   chunks_dn.ls <- 
-    denoise_chunks(chunks.ls, relative.threshold = 0.1, add.signs = TRUE)
+    denoise_chunks(chunks.ls, 
+                   time.step = 0.05,
+                   relative.threshold = 0.20, 
+                   add.signs = TRUE)
 )
+```
+In a continuous time series without noise, the derivative is equal to zero at the point where the slope changes sign. In a time series measured at discrete time points, a change in sign must be used as well as a zero value to locate maxima and minima, as the change in slope is most likely to land in-between two time points.
+
+Once de-noised, changes in slope can be detected using `sign()` to discretize the data into values indicating decrease (-1) , no-change (0) and increase (+1).
+
+Considering the first burst of PAR measurements, we find 597 time steps with
+change in irradiance.
+
+```{r}
+# time steps with no change
+sum(abs(chunks_dn.ls[[1]]$PAR_Den_CS.diff) < 0.20 * 0.05, na.rm = TRUE)
+# increasing time steps
+sum(chunks_dn.ls[[1]]$PAR_Den_CS.diff > 0.20 * 0.05, na.rm = TRUE)
+# decreasing time steps
+sum(chunks_dn.ls[[1]]$PAR_Den_CS.diff > 0.20 * 0.05, na.rm = TRUE)
 ```
 
 Subsequently, changes in slope can be located using `rle()`. In this example all differences are smaller than 5 per thousand of the mean irradiance.
@@ -237,12 +280,21 @@ for (i in names(chunks_dn.ls)) {
 }
 length(sign_changes.ls)
 ```
+Check that sum of lengths equal length of burst.
+
+```{r}
+sum(sign_changes.ls[[1]][["rle"]][["lengths"]])
+```
+
+```{r}
+sum(sign_changes.ls[[2]][["rle"]][["lengths"]])
+```
 
 ### Using a reference
 
-Instead of detecting sunflecks as a dynamic temporal process, or local changes in slope, especially in the case of cloud flecks an alternative is to use the estimated clear-sky irradiance as reference and to quantify the size of the deviations, both increases and decreases, in many cases using a fixed threshold. An alternative to using a clear sky simulation is to use a smoothed version of the same data as a reference, a moving median, a sline-based smoother. However, each of these and the temporal-process approach described above are fundamentally different and describe different properties of the data.
+Instead of detecting sunflecks as a dynamic temporal process, or local changes in slope, especially in the case of cloud flecks an alternative is to use the estimated clear-sky irradiance as reference and to quantify the size of the deviations, both increases and decreases, in many cases using a fixed threshold. An alternative to using a clear sky simulation is to use a smoothed version of the same data as a reference, a moving median, or a spline-based smoother. However, each of these and the temporal-process approach described above are fundamentally different and describe different properties of the data.
 
-Both observed and reference irradiances need to be available at the same time points. This in some cases can make it necesary to use interpolation to obtain suitable reference data. After this, a simple difference at each time point can be computed and compared against a threshold. As the reference varies in time, the threshold used can expressed either as an absolute difference or as a relative difference, thus, giving two different possible quantifications.
+Both observed and reference irradiances need to be available at the same time points. This in some cases can make it necessary to use interpolation to obtain suitable reference data. After this, a simple difference at each time point can be computed and compared against a threshold. As the reference varies in time, the threshold used can be expressed either as an absolute difference or as a relative difference, thus, giving two different quantifications.
 
 ### Using a quantile smoother
 

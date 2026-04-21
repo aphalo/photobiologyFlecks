@@ -7,6 +7,7 @@
 denoise_chunks(
   data,
   time.name = "TIMESTAMP",
+  time.step = NULL,
   qty.name = NULL,
   absolute.threshold = 0,
   relative.threshold = 0.05,
@@ -23,16 +24,18 @@ quantity, and one column of running differences for each measured quantity.}
 \item{time.name}{character vector of length one Name of the variable
 containing time stamps for the observations.}
 
+\item{time.step}{numeric The duration in seconds of one time step.}
+
 \item{qty.name}{character vector Name(s) of variable(s) in \code{data}
 containing values observed quantities. If \code{qty.name = NULL}, the
 default, all columns are retained.}
 
 \item{absolute.threshold}{numeric The largest difference values to ignore,
-i.e., to set to zero.}
+i.e., to set to zero. Expressed as a change per second.}
 
 \item{relative.threshold}{numeric The multiplier to apply to the spread of
 \code{x} to obtain the largest difference values to ignore, i.e., to set to
-zero.}
+zero. Expressed as a change per second.}
 
 \item{range.baseline}{numeric An additional value included in the computation
 of the range of the observations. Set \code{range.baseline = NA} for the

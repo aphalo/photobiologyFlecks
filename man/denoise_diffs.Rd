@@ -7,6 +7,7 @@
 denoise_diffs(
   x,
   x.diff,
+  time.step = NULL,
   absolute.threshold = 0,
   relative.threshold = 0.05,
   range.baseline = 0
@@ -18,12 +19,14 @@ differences, or the data themselves.}
 
 \item{x.diff}{numeric vector The running differences to be de noised.}
 
+\item{time.step}{numeric The duration in seconds of one time step.}
+
 \item{absolute.threshold}{numeric The largest difference values to ignore,
-i.e., to set to zero.}
+i.e., to set to zero. Expressed as a change per second.}
 
 \item{relative.threshold}{numeric The multiplier to apply to the spread of
 \code{x} to obtain the largest difference values to ignore, i.e., to set to
-zero.}
+zero. Expressed as a change per second.}
 
 \item{range.baseline}{numeric An additional value included in the computation
 of the range of the observations. Set \code{range.baseline = NA} for the
