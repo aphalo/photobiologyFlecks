@@ -46,6 +46,8 @@ navbar:
         href: articles/r4p-introduction.html
       - text: '1 Characterization of light flecks'
         href: articles/user-guide.html
+      - text: 'Cloudflecks: big data example'
+        href: articles/big-data-example.html
     tutorials:
       text: Resources
       menu:
