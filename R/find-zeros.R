@@ -1,22 +1,23 @@
-#' Find all timepoints when time series crosses zero
+#' Find all time points when time series crosses zero
 #'
 #' First function to use on discrete time-series. Returns a vector giving the
 #' position of every zero crossing within the time-series.
 #'
 #' @details
-#' For every timepoint,
-#' the numerical derivative is calculated using \code{\link{calDev}()} and each sequential
-#' timepoint of the numerical derivative is multiplied. When the results is
-#' negative, the time-series crosses zero.
+#' For every time point, the numerical derivative is calculated using
+#' \code{\link{diff}()} and each sequential time point of the numerical
+#' derivative is multiplied. When the result is negative, the time-series
+#' crosses zero.
 #'
 #' @param time numeric Vector of times from the time-series (\emph{x}-axis).
 #' @param var numeric Vector of observations from the time-series (y-axis).
-#' @param lim numeric Limit for multiplication, only values higher than lim are
-#' kept (removes noise and prevents recording zeroes when time-series is flat.).
+#' @param zero.lim numeric Limit for multiplication, only values higher than
+#'   \code{zero.lim} are kept (removes noise and prevents recording zeroes when
+#'   time-series is flat.).
 #' @param timeSplit numeric Increase time-series frequency (value at t = 0 are
-#' copied from t = 1 to t = 9, etc.). 10 usually garantees accuracy.
+#'   copied from t = 1 to t = 9, etc.). 10 usually garantees accuracy.
 #' @param return_n1n2 logical  If \code{TRUE}, also return the value of the
-#' multiplication.
+#'   multiplication.
 #'
 #' @return An \code{integer} vector or a data frame with two variables.
 #'
@@ -30,7 +31,7 @@
 #'
 find_zeros <- function(time,
                        var,
-                       lim = 0.0005,
+                       zero.lim = 0.0005,
                        timeSplit = 10,
                        return_n1n2 = FALSE)
 {
@@ -38,75 +39,25 @@ find_zeros <- function(time,
   # where irradiance changes direction.
   timeStep <- time[2] - time[1]
   x_out <- seq(min(time), max(time), timeStep / timeSplit)
-  int <- stats::approx(x = time, y = var, xout = x_out)
-  sgf <- calDev(x = int$x, y = int$y)
+  int.df <- stats::approx(x = time, y = var, xout = x_out)
+  sgf <- diff(int.df[["y"]]) / diff(int.df[["x"]])
+  n1n2 <- sgf[1:(length(sgf) - 1)] * sgf[2:length(sgf)]
+  zeros <- which(n1n2 < 0 & abs(n1n2) > zero.lim) + 1L
+  names(zeros) <- ifelse(sgf[zeros] < 0, "up", "low")
 
-  zeros <- vector()
-  n1n2 <- vector()
-  for(i in 1:length(sgf))
-  {
-    if((i+1) > length(sgf)){next()}
-
-    n1 = sgf[i]
-    n2 = sgf[i+1]
-    if(n1 * n2 < 0)
-    {
-      # A limit is defined to ignore the extremely small changes of direction
-      # i.e. when light is mostly stable
-      if(abs(n1 * n2) > lim)
-      {
-        zeros <- append(zeros, values = (i + 1))
-        n1n2 <- append(n1n2, values = n1*n2)
-        if(n1 < 0)
-        {
-          names(zeros)[length(zeros)] <- "low"
-        } else {
-          names(zeros)[length(zeros)] <- "up"
-        }
-      }
-    }
+  message("Found ", length(zeros), "zeros")
+  if (length(zeros)) {
+    message("You may want to try with a different 'zero.lim' value.")
+    return(data.frame())
   }
 
-  if(return_n1n2 == TRUE)
-  {
-    dfZ <- data.frame("zeros" = zeros, "n1n2" = n1n2)
+  if (return_n1n2 == TRUE) {
+    dfZ <- data.frame("zeros" = zeros,
+                      "direction" = names(zeros),
+                      "n1n2" = n1n2[zeros - 1L],
+                      time = int.df[["x"]][zeros])
     return(dfZ)
   } else {
     return(zeros)
   }
-}
-
-### Calculate numerical derivative of discrete time-series
-calDev <- function(x, y)
-{
-  if(length(x) != length(y)){stop('x and y dont have the same length')}
-
-  dev <- numeric(length(x)-1)
-  for(i in 1:length(x))
-  {
-    if((i + 1) > length(x)){next()}
-
-    iDev <- (y[i+1] - y[i]) / (x[i+1] - x[i])
-    dev[i] <- iDev
-  }
-  return(dev)
-}
-
-#' Calculate numerical derivative of discrete time-series
-#'
-#' @keywords internal
-#'
-calDev <- function(x, y)
-{
-  if(length(x) != length(y)){stop('x and y dont have the same length')}
-
-  dev <- numeric(length(x)-1)
-  for(i in 1:length(x))
-  {
-    if((i + 1) > length(x)){next()}
-
-    iDev <- (y[i+1] - y[i]) / (x[i+1] - x[i])
-    dev[i] <- iDev
-  }
-  return(dev)
 }

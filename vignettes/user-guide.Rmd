@@ -63,6 +63,7 @@ library(photobiology)
 library(photobiologyInOut)
 library(photobiologyFlecks)
 library(ggplot2)
+set_theme(theme_bw())
 ```
 
 ## The data
@@ -230,26 +231,84 @@ chunks.ls <-
 ```
 
 ```{r}
+# extract one chunk, 15 min at 0.05 s
 chunk <- chunks.ls[[1]]
-chunk$tod <- as_tod(chunk$time, unit.out = "seconds")
-chunk$chuck.time <- chunk$tod - chunk$tod[1]
+range(chunk$time) |> as.numeric() |> diff() # seconds
 
-Z <- find_zeros(time = chunk$chuck.time,
+# time into chunk in seconds as numeric
+chunk$tod <- as_tod(chunk$time, unit.out = "seconds")
+chunk$chunk.time <- chunk$tod - chunk$tod[1]
+range(chunk$chunk.time)
+
+Z <- find_zeros(time = chunk$chunk.time,
                 var = chunk$Q_PAR)
-dfS <- find_flecks(time = chunk$chuck.time,
-                   var = chunk$Q_PAR,
-                   zeroes = Z,
-                   minTime = 0, 
-                   minAmp = 5, 
-                   minPdiff = 0.05,
-                   asymmetry = 1/4,
-                   shadeflecks = FALSE,
-                   asmMethod = "max",
-                   verbose = FALSE)
-plot_ts_fleck(time = chunk$chuck.time,
-              var = chunk$Q_PAR,
-              zeroes = Z,
-              fleck.data = dfS)
+
+sun_flecks.df <- find_flecks(time = chunk$chunk.time,
+                             var = chunk$Q_PAR,
+                             minTime = 0.001, 
+                             minAmp = 0, 
+                             minPdiff = 0.00025,
+                             asymmetry = 0,
+                             shadeflecks = FALSE,
+                             asmMethod = "max",
+                             time.digits = 6,
+                             var.digits = 5,
+                             verbose = FALSE)
+```
+
+```{r}
+sun_flecks.fig <-
+  ggplot(data = chunk) +
+  geom_line(aes(chunk.time, Q_PAR), linewidth = 0.2, na.rm = TRUE) +
+  geom_point(aes(peakTime, peak), data = sun_flecks.df, 
+             size = 0.5, colour = "coral2", na.rm = TRUE) +
+  geom_point(aes(baselineTime1, baseline1), data = sun_flecks.df,
+             size = 0.5, colour = "chartreuse3", na.rm = TRUE) +
+  geom_point(aes(baselineTime2, baseline2), data = sun_flecks.df,
+             size = 0.5, colour = "chartreuse3", na.rm = TRUE) +
+  geom_text(aes(peakTime, peak, label = no), data = sun_flecks.df,
+            colour = "coral2",
+            position = position_nudge(y = 30), size = 2.7, na.rm = TRUE,
+            fontface = "bold")
+
+sun_flecks.fig
+
+sun_flecks.fig + xlim(0, 100)
+
+knitr::kable(sun_flecks.df)
+```
+
+```{r}
+shade_flecks.df <- find_flecks(time = chunk$chunk.time,
+                               var = chunk$Q_PAR,
+                               minTime = 0.001, 
+                               minAmp = 0, 
+                               minPdiff = 0.00025,
+                               asymmetry = 0,
+                               shadeflecks = TRUE,
+                               asmMethod = "max",
+                               time.digits = 6,
+                               var.digits = 5,
+                               verbose = FALSE)
+
+shade_flecks.fig <-
+  ggplot(data = chunk) +
+  geom_line(aes(chunk.time, Q_PAR), linewidth = 0.2, na.rm = TRUE) +
+  geom_point(aes(peakTime, peak), data = shade_flecks.df,
+             size = 0.5, colour = "blue", na.rm = TRUE) +
+  geom_point(aes(baselineTime1, baseline1), data = shade_flecks.df,
+             size = 0.5, colour = "chartreuse3", na.rm = TRUE) +
+  geom_point(aes(baselineTime2, baseline2), data = shade_flecks.df, 
+             size = 0.5, colour = "chartreuse3", na.rm = TRUE) +
+  geom_text(aes(peakTime, peak, label = no), data = shade_flecks.df, 
+            colour = "blue", fontface = "bold",
+            position = position_nudge(y = 30), size = 2.7, na.rm = TRUE)
+
+shade_flecks.fig
+
+shade_flecks.fig + xlim(0, 100)
+
+knitr::kable(shade_flecks.df)
 ```
 
 ### Using a reference

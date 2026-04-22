@@ -2,17 +2,18 @@
 % Please edit documentation in R/find-zeros.R
 \name{find_zeros}
 \alias{find_zeros}
-\title{Find all timepoints when time series crosses zero}
+\title{Find all time points when time series crosses zero}
 \usage{
-find_zeros(time, var, lim = 5e-04, timeSplit = 10, return_n1n2 = FALSE)
+find_zeros(time, var, zero.lim = 5e-04, timeSplit = 10, return_n1n2 = FALSE)
 }
 \arguments{
 \item{time}{numeric Vector of times from the time-series (\emph{x}-axis).}
 
 \item{var}{numeric Vector of observations from the time-series (y-axis).}
 
-\item{lim}{numeric Limit for multiplication, only values higher than lim are
-kept (removes noise and prevents recording zeroes when time-series is flat.).}
+\item{zero.lim}{numeric Limit for multiplication, only values higher than
+\code{zero.lim} are kept (removes noise and prevents recording zeroes when
+time-series is flat.).}
 
 \item{timeSplit}{numeric Increase time-series frequency (value at t = 0 are
 copied from t = 1 to t = 9, etc.). 10 usually garantees accuracy.}
@@ -28,10 +29,10 @@ First function to use on discrete time-series. Returns a vector giving the
 position of every zero crossing within the time-series.
 }
 \details{
-For every timepoint,
-the numerical derivative is calculated using \code{\link{calDev}()} and each sequential
-timepoint of the numerical derivative is multiplied. When the results is
-negative, the time-series crosses zero.
+For every time point, the numerical derivative is calculated using
+\code{\link{diff}()} and each sequential time point of the numerical
+derivative is multiplied. When the result is negative, the time-series
+crosses zero.
 }
 \references{
 Durand M, Matule B, Burgess AJ, Robson TM. 2021. Sunfleck properties from

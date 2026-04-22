@@ -17,13 +17,7 @@ Z <- find_zeros(time = df1$Time,
 
 dfS <- find_flecks(time = df1$Time,
                    var = df1$PAR_q,
-                   zeroes = Z,
                    minTime = 0, minAmp = 5, minPdiff = 0.05,
                    shadeflecks = FALSE,
                    asmMethod = "max",
                    verbose = FALSE)
-
-plot_ts_fleck(time = df1$Time,
-              var = df1$PAR_q,
-              zeroes = Z,
-              fleck.data = dfS)

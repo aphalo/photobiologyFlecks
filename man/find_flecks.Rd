@@ -7,7 +7,7 @@
 find_flecks(
   time,
   var,
-  zeroes = find_zeros(time, var),
+  zero.lim = 5e-04,
   minTime = 0,
   minAmp = 0,
   minPdiff = 0,
@@ -17,6 +17,8 @@ find_flecks(
   bounds = c(0, 1),
   timeSplit = 10,
   shadeflecks = FALSE,
+  time.digits = 3,
+  var.digits = 2,
   verbose = TRUE
 )
 }
@@ -25,18 +27,19 @@ find_flecks(
 
 \item{var}{numeric Vector of observations from the time-series (y-axis).}
 
-\item{zeroes}{Vector of zeroes returned by \code{find_zeroes()} on the same
-\code{time} and \code{var} arguments.}
+\item{zero.lim}{numeric Limit for multiplication, only values higher than
+\code{zero.lim} are kept (removes noise and prevents recording zeroes when
+time-series is flat.).}
 
-\item{minTime}{numeric Flecks found with duration below `minTime` will be
-discarded. Keep at 0 to keep all flecks.}
+\item{minTime}{numeric Flecks found with duration below \code{minTime} will
+be discarded. Keep at 0 to keep all flecks.}
 
-\item{minAmp}{numeric Flecks found with amplitude below `minAmp` will be
+\item{minAmp}{numeric Flecks found with amplitude below \code{minAmp} will be
 discarded. Keep at 0 to keep all flecks.}
 
 \item{minPdiff}{numeric Flecks found with a percent difference between peak
-and baseline that is below `minPdiff` will be discarded. Keep at 0 to keep
-all flecks.}
+and baseline that is below \code{minPdiff} will be discarded. Keep at 0 to
+keep all flecks.}
 
 \item{asymmetry}{numeric Threshold value to qualify fleck as asymeric.
 Asymetry happens when the baseline have large difference in their value.}
@@ -57,26 +60,32 @@ normalize between 0 and 1 by default.}
 interpolation. A value of 10 usually guarantee accuracy.}
 
 \item{shadeflecks}{logical If true, run the function in \emph{shadefleck}
-mode instead of in the default \emph{sunfleck} mode,
-i.e., the function will find troughs instead of peaks in the data.}
+mode instead of in the default \emph{sunfleck} mode, i.e., the function
+will find troughs instead of peaks in the data.}
+
+\item{time.digits, var.digits}{integer Argument passed to parameter
+\code{digits} in internal calls to \code{\link{round}()} for \code{time}
+and \code{var} values.}
 
 \item{verbose}{logical If \code{TRUE}, provides more information while
 running.}
 }
 \description{
-Detects flecks from time series and zero vector returned by
-\code{\link{find_zeros}(()}.
+Detects and characterizes "flecks" in a time series of irradiances.
 }
 \details{
-A sunfleck is caracterized by an increased followed by a decrease.
-Function search zero vector for such events. Once found, checks for asymetry
+A sunfleck is characterized by an increase followed by a decrease
+in irradiance. As a first step zero crossings of the derivative are located
+using the same code as in \code{\link{find_zeros}()}. In a second step,
+flecks are searched and once found, are checked for asymmetry
 between baselines. If found, tries to extend baseline a bit. If still
-asymeric, behaviour is as defined by \code{asmMethod}. Then fleck is
-checks for criteria as defined by \code{minTime}, \code{minAmp} and
+asymmetric, behaviour is as defined by \code{asmMethod}. Then fleck is
+compared againts criteria given by \code{minTime}, \code{minAmp} and
 \code{minPdiff}. If passed, the baselines are trimmed. Conditions are
 checked once more, and trimming is reversed if conditions are not passed
-anymore. Finally, log the fleck in a table returned at the end. At the end,
-remove flecks overlapping, and calculate interval in time between two flecks.
+any more. In the last step overlapping flecks are removed and the time
+interval between successive flecks is computed. Finally, the fleck properties
+are returned in a data frame.
 }
 \references{
 Durand M, Matule B, Burgess AJ, Robson TM. 2021. Sunfleck properties from

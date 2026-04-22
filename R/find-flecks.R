@@ -1,29 +1,28 @@
 #' Find flecks
 #'
-#' Detects flecks from time series and zero vector returned by
-#' \code{\link{find_zeros}(()}.
+#' Detects and characterizes "flecks" in a time series of irradiances.
 #'
-#' @details A sunfleck is caracterized by an increased followed by a decrease.
-#' Function search zero vector for such events. Once found, checks for asymetry
+#' @details A sunfleck is characterized by an increase followed by a decrease
+#' in irradiance. As a first step zero crossings of the derivative are located
+#' using the same code as in \code{\link{find_zeros}()}. In a second step,
+#' flecks are searched and once found, are checked for asymmetry
 #' between baselines. If found, tries to extend baseline a bit. If still
-#' asymeric, behaviour is as defined by \code{asmMethod}. Then fleck is
-#' checks for criteria as defined by \code{minTime}, \code{minAmp} and
+#' asymmetric, behaviour is as defined by \code{asmMethod}. Then fleck is
+#' compared againts criteria given by \code{minTime}, \code{minAmp} and
 #' \code{minPdiff}. If passed, the baselines are trimmed. Conditions are
 #' checked once more, and trimming is reversed if conditions are not passed
-#' anymore. Finally, log the fleck in a table returned at the end. At the end,
-#' remove flecks overlapping, and calculate interval in time between two flecks.
+#' any more. In the last step overlapping flecks are removed and the time
+#' interval between successive flecks is computed. Finally, the fleck properties
+#' are returned in a data frame.
 #'
 #' @inheritParams find_zeros
-#'
-#' @param zeroes  Vector of zeroes returned by \code{find_zeroes()} on the same
-#'   \code{time} and \code{var} arguments.
-#' @param minTime numeric Flecks found with duration below `minTime` will be
-#'   discarded. Keep at 0 to keep all flecks.
-#' @param minAmp numeric Flecks found with amplitude below `minAmp` will be
+#' @param minTime numeric Flecks found with duration below \code{minTime} will
+#'   be discarded. Keep at 0 to keep all flecks.
+#' @param minAmp numeric Flecks found with amplitude below \code{minAmp} will be
 #'   discarded. Keep at 0 to keep all flecks.
 #' @param minPdiff numeric Flecks found with a percent difference between peak
-#'   and baseline that is below `minPdiff` will be discarded. Keep at 0 to keep
-#'   all flecks.
+#'   and baseline that is below \code{minPdiff} will be discarded. Keep at 0 to
+#'   keep all flecks.
 #' @param asymmetry numeric Threshold value to qualify fleck as asymeric.
 #'   Asymetry happens when the baseline have large difference in their value.
 #' @param trimCV Control trimming threshold. Fleck baselines are trimmed
@@ -38,8 +37,11 @@
 #' @param timeSplit integer Increase time-series data frequency by linear
 #'   interpolation. A value of 10 usually guarantee accuracy.
 #' @param shadeflecks logical If true, run the function in \emph{shadefleck}
-#'   mode instead of in the default \emph{sunfleck} mode,
-#'   i.e., the function will find troughs instead of peaks in the data.
+#'   mode instead of in the default \emph{sunfleck} mode, i.e., the function
+#'   will find troughs instead of peaks in the data.
+#' @param time.digits,var.digits integer Argument passed to parameter
+#'   \code{digits} in internal calls to \code{\link{round}()} for \code{time}
+#'   and \code{var} values.
 #' @param verbose logical If \code{TRUE}, provides more information while
 #'   running.
 #'
@@ -53,7 +55,7 @@
 #'
 find_flecks <- function(time,
                         var,
-                        zeroes = find_zeros(time, var),
+                        zero.lim = 0.0005,
                         minTime = 0,
                         minAmp = 0,
                         minPdiff = 0,
@@ -63,77 +65,98 @@ find_flecks <- function(time,
                         bounds = c(0, 1),
                         timeSplit = 10,
                         shadeflecks = FALSE,
+                        time.digits = 3,
+                        var.digits = 2,
                         verbose = TRUE) {
-  no <- 0
 
-  # Define if baseline value is higher or lower than peak
-  if(shadeflecks == FALSE) {upOrLow <- "low"} else {upOrLow <- "up"}
-  zz <- zeroes[names(zeroes) == upOrLow]
-
-  # Zeros are on the interpolated curve so
-  # we have to redefine it here.
+  # find zeros here so that interpolation is done only once
+  # linear interpolation of whole series is use to increase time resolution
+  # (note: interpolation is strictly needed only at the zeros!)
   timeStep <- time[2] - time[1]
-  x_out <- seq(0, max(time), timeStep / timeSplit)
-  int <- stats::approx(x = time, y = var, xout = x_out)
+  x_out <- seq(min(time), max(time), timeStep / timeSplit)
+  int.df <- stats::approx(x = time, y = var, xout = x_out)
+  sgf <- diff(int.df[["y"]]) / diff(int.df[["x"]])
+  n1n2 <- sgf[1:(length(sgf) - 1)] * sgf[2:length(sgf)]
+  zeros <- which(n1n2 < 0 & abs(n1n2) > zero.lim) + 1L
+  names(zeros) <- ifelse(sgf[zeros] < 0, "up", "low")
 
-  timeInt <- int$x
-  varInt <- int$y
+  # Annotate with baseline higher or lower than peak
+  if (shadeflecks) {
+    zz <- zeros[names(zeros) == "up"]
+  } else {
+    zz <- zeros[names(zeros) == "low"]
+  }
+
+  # input
+  timeInt <- int.df$x
+  varInt <- int.df$y
 
   # Initialize output
-  l0 <- matrix(nrow = length(zeroes), ncol = 17)
+  l0 <- matrix(nrow = length(zeros), ncol = 17)
   l0 <- as.data.frame(l0)
   l0 <- as.list(l0)
 
+  # index
+  no <- 0
+
   for (i in 1:length(zz)) {
     flag <- 0
-    newi <- which(zz[i] == zeroes)
+    newi <- which(zz[i] == zeros)
 
     # Skip the last data points
-    if((newi+2) > length(zeroes)){next()}
+    if ((newi + 2) > length(zeros)) {
+      next()
+    }
 
-    b1 <- zeroes[newi]
-    b2 <- zeroes[newi + 2]
-    p <- zeroes[newi + 1]
-    Xb1 <- round(timeInt[b1], 3)
-    Xb2 <- round(timeInt[b2], 3)
-    Xp <- round(timeInt[p], 3)
-    Yb1 <- round(varInt[b1], 2)
-    Yb2 <- round(varInt[b2], 2)
-    Yp <- round(varInt[p], 2)
+    b1 <- zeros[newi]
+    b2 <- zeros[newi + 2]
+    p <- zeros[newi + 1]
+
+    Xb1 <- round(timeInt[b1], time.digits)
+    Xb2 <- round(timeInt[b2], time.digits)
+    Xp <- round(timeInt[p], time.digits)
+
+    Yb1 <- round(varInt[b1], var.digits)
+    Yb2 <- round(varInt[b2], var.digits)
+    Yp <- round(varInt[p], var.digits)
 
     ## Check if left and right baseline are similar, if not look for points before or after
     # Left side too small
     if (abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry) {
-      flag = 1
-      pi = 0
+      flag <- 1
+      pi <- 0
       while (abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry & pi < 3) {
-        pi = pi + 1
-        b1 <- zeroes[newi - pi]
-        Xb1 <- round(timeInt[b1], 3)
-        Yb1 <- round(varInt[b1], 2)
+        pi <- pi + 1
+        b1 <- zeros[newi - pi]
+        Xb1 <- round(timeInt[b1], time.digits)
+        Yb1 <- round(varInt[b1], var.digits)
 
         # For first point
         if (length(b1) == 0) {
-          b1 <- zeroes[newi]
-          Xb1 <- round(timeInt[b1], 3)
-          Yb1 <- round(varInt[b1], 2)
+          b1 <- zeros[newi]
+          Xb1 <- round(timeInt[b1], time.digits)
+          Yb1 <- round(varInt[b1], var.digits)
           break
         }
       }
     }
     # Right side too small
     if (abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry) {
-      flag = 1
-      pi = 0
+      flag <- 1
+      pi <- 0
       while(abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry & pi < 3)
       {
         pi = pi + 1
-        b2 <- zeroes[newi + 2 + pi]
-        Xb2 <- round(timeInt[b2], 3)
-        Yb2 <- round(varInt[b2], 2)
+        b2 <- zeros[newi + 2 + pi]
+        Xb2 <- round(timeInt[b2], time.digits)
+        Yb2 <- round(varInt[b2], var.digits)
 
         # For first point
-        if(is.na(b2)){b2 <- zeroes[newi + 2] ; Xb2 <- round(timeInt[b2], 3) ; Yb2 <- round(varInt[b2], 2) ; break}
+        if (is.na(b2)) {
+          b2 <- zeros[newi + 2]
+          Xb2 <- round(timeInt[b2], time.digits)
+          Yb2 <- round(varInt[b2], var.digits)
+          break}
       }
     }
 
@@ -141,14 +164,13 @@ find_flecks <- function(time,
     if(abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry |
        abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry) {
       ASYMMETRIC <- TRUE
-      if(asmMethod != "rm")
-      {
-        b1 <- zeroes[newi]
-        b2 <- zeroes[newi + 2]
-        Xb1 <- round(timeInt[b1], 3)
-        Xb2 <- round(timeInt[b2], 3)
-        Yb1 <- round(varInt[b1], 2)
-        Yb2 <- round(varInt[b2], 2)
+      if (asmMethod != "rm") {
+        b1 <- zeros[newi]
+        b2 <- zeros[newi + 2]
+        Xb1 <- round(timeInt[b1], time.digits)
+        Xb2 <- round(timeInt[b2], time.digits)
+        Yb1 <- round(varInt[b1], time.digits)
+        Yb2 <- round(varInt[b2], time.digits)
       } else {next()}
     } else {
       ASYMMETRIC <- FALSE
@@ -200,13 +222,15 @@ find_flecks <- function(time,
     # If fleck pass criteria, then trim and recalculate
     if (duration > minTime & amp > minAmp & pdiff > minPdiff) {
       # Left trimming
-      it = 0 ; trimLeft = 0 ; old_trimLeft = 1
+      it <- 0
+      trimLeft <- 0
+      old_trimLeft = 1
       while (old_trimLeft != trimLeft) {
         it = it + 1
 
         if(b1 + it * timeSplit < length(varInt)){
           Yk1 = round(varInt[b1 + it * timeSplit], 2)
-          Xk1 = round(timeInt[b1 + it * timeSplit], 3)
+          Xk1 = round(timeInt[b1 + it * timeSplit], time.digits)
 
           old_trimLeft <- trimLeft
           if (stats::sd(c(Yb1, Yk1)) / mean(c(Yb1, Yk1)) < trimCV) {
@@ -215,19 +239,19 @@ find_flecks <- function(time,
 
           # If trimming goes too far, abandon trimming
           if (Xk1 == Xp) {
-            trimLeft = 0
-            old_trimLeft = 0
+            trimLeft <- 0
+            old_trimLeft <- 0
           }
         } else {
-          trimLeft = 0
-          old_trimLeft = 0
+          trimLeft <- 0
+          old_trimLeft <- 0
         }
       }
 
       # Right trimming
-      it = 0
-      trimRight = 0
-      old_trimRight = 1
+      it <- 0
+      trimRight <- 0
+      old_trimRight <- 1
       while (old_trimRight != trimRight) {
         it = it + 1
         if (b2 - it * timeSplit > 0) {
@@ -241,12 +265,12 @@ find_flecks <- function(time,
 
           # If trimming goes too far, abandon trimming
           if (Xk2 == Xp) {
-            trimRight = 0
-            old_trimRight = 0
+            trimRight <- 0
+            old_trimRight <- 0
           }
         } else {
-          trimRight = 0
-          old_trimRight = 0
+          trimRight <- 0
+          old_trimRight <- 0
         }
       }
 
@@ -259,8 +283,8 @@ find_flecks <- function(time,
         b2 <- b2_new
       }
 
-      Xb1 <- round(timeInt[b1], 3)
-      Xb2 <- round(timeInt[b2], 3)
+      Xb1 <- round(timeInt[b1], time.digits)
+      Xb2 <- round(timeInt[b2], time.digits)
       Yb1 <- round(varInt[b1], 2)
       Yb2 <- round(varInt[b2], 2)
 
@@ -283,7 +307,7 @@ find_flecks <- function(time,
                             ((Ybaseline - bounds[1]) / (bounds[2] - bounds[1]))),
                       4)
       pdiff <- round(amp / Ybaseline, 4)
-      duration <- round(abs(Xb2 - Xb1), 3)
+      duration <- round(abs(Xb2 - Xb1), 4)
 
       irrad <- sum(varInt[seq(b1,b2,timeSplit)]) * timeStep
       interpBaseline <- stats::approx(x = c(timeInt[b1], timeInt[b2]),
@@ -304,7 +328,7 @@ find_flecks <- function(time,
       row <- c(no, Xp, Yp, Yb1, Yb2, Ybaseline, amp, relAmp, pdiff, duration,
                irradSunfleck, relIrradSunfleck, irrad, Xb1, Xb2,
                ifelse(ASYMMETRIC == T, "asymmetric", "symmetric"),
-               zeroes[newi + 1])
+               zeros[newi + 1])
 
       for (j in 1:length(row)) {
         l0[[j]][no] <- row[j]
@@ -323,8 +347,10 @@ find_flecks <- function(time,
     df0[ , i] <- as.numeric(df0[ , i])
   }
 
+  message("Found ", nrow(df0), ifelse(shadeflecks, " shadeflecks", " sunflecks"))
   if (nrow(df0) == 0) {
-    stop("No sun/shade-fleck found. Try with different min parameters.")
+    message("You may want to try with different 'min...' values.")
+    return(data.frame())
   }
   colnames(df0) <-  c("no", "peakTime", "peak",
                       "baseline1", "baseline2", "baseline",
@@ -353,8 +379,7 @@ find_flecks <- function(time,
   if(nrow(df0) > 1)
   {
     df0$timeInterval <- NA
-    for(iROW in 2:nrow(df0))
-    {
+    for (iROW in 2:nrow(df0)) {
       df0$timeInterval[iROW] <- (df0$peakTime[iROW] - df0$peakTime[iROW-1])
     }
   }
