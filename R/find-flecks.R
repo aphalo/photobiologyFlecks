@@ -64,7 +64,7 @@ find_flecks <- function(time,
                         timeSplit = 10,
                         shadeflecks = FALSE,
                         verbose = TRUE) {
-  no = 0
+  no <- 0
 
   # Define if baseline value is higher or lower than peak
   if(shadeflecks == FALSE) {upOrLow <- "low"} else {upOrLow <- "up"}
@@ -84,9 +84,8 @@ find_flecks <- function(time,
   l0 <- as.data.frame(l0)
   l0 <- as.list(l0)
 
-  for (i in 1:length(zz))
-  {
-    flag = 0
+  for (i in 1:length(zz)) {
+    flag <- 0
     newi <- which(zz[i] == zeroes)
 
     # Skip the last data points
@@ -104,24 +103,26 @@ find_flecks <- function(time,
 
     ## Check if left and right baseline are similar, if not look for points before or after
     # Left side too small
-    if(abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry)
-    {
+    if (abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry) {
       flag = 1
       pi = 0
-      while(abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry & pi < 3)
-      {
+      while (abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry & pi < 3) {
         pi = pi + 1
         b1 <- zeroes[newi - pi]
         Xb1 <- round(timeInt[b1], 3)
         Yb1 <- round(varInt[b1], 2)
 
         # For first point
-        if(length(b1) == 0){b1 <- zeroes[newi] ; Xb1 <- round(timeInt[b1], 3) ; Yb1 <- round(varInt[b1], 2) ; break}
+        if (length(b1) == 0) {
+          b1 <- zeroes[newi]
+          Xb1 <- round(timeInt[b1], 3)
+          Yb1 <- round(varInt[b1], 2)
+          break
+        }
       }
     }
     # Right side too small
-    if(abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry)
-    {
+    if (abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry) {
       flag = 1
       pi = 0
       while(abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry & pi < 3)
@@ -137,8 +138,8 @@ find_flecks <- function(time,
     }
 
     # If left and right baseline are still not similar, use return to original values and flag
-    if(abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry | abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry)
-    {
+    if(abs(Yp - Yb1) < abs(Yp - Yb2) * asymmetry |
+       abs(Yp - Yb2) < abs(Yp - Yb1) * asymmetry) {
       ASYMMETRIC <- TRUE
       if(asmMethod != "rm")
       {
@@ -154,68 +155,98 @@ find_flecks <- function(time,
     }
 
     # Skip points where baseline is higher than peak
-    if(shadeflecks == FALSE){if(Yb1 > Yp | Yb2 > Yp){next()}} else {if(Yb1 < Yp | Yb2 < Yp){next()}}
+    if (shadeflecks == FALSE) {
+      if (Yb1 > Yp | Yb2 > Yp) {
+        next()
+      }
+    } else {
+      if (Yb1 < Yp | Yb2 < Yp) {
+        next()
+      }
+    }
 
     # Initial calculation of fleck data
-    if(ASYMMETRIC == TRUE)
-    {
-      if(asmMethod == "max" & shadeflecks == TRUE){Ybaseline <-  max(c(Yb1, Yb2))}
-      if(asmMethod == "max" & shadeflecks == FALSE){Ybaseline <-  min(c(Yb1, Yb2))}
-      if(asmMethod == "mean"){Ybaseline <- mean(c(Yb1, Yb2))}
+    if (ASYMMETRIC == TRUE) {
+      if (asmMethod == "max" & shadeflecks == TRUE) {
+        Ybaseline <-  max(c(Yb1, Yb2))
+      }
+      if (asmMethod == "max" & shadeflecks == FALSE) {
+        Ybaseline <-  min(c(Yb1, Yb2))
+      }
+      if (asmMethod == "mean") {
+        Ybaseline <- mean(c(Yb1, Yb2))
+      }
     } else {
       Ybaseline <- mean(c(Yb1, Yb2))
     }
 
     # Get closest baseline to run condition check on that
-    if(shadeflecks == TRUE){YCloseBsl <- min(c(Yb1, Yb2))} else {YCloseBsl <- max(c(Yb1, Yb2))}
+    if (shadeflecks == TRUE) {
+      YCloseBsl <- min(c(Yb1, Yb2))
+    } else {
+      YCloseBsl <- max(c(Yb1, Yb2))
+    }
 
     amp <- round(abs(Yp - YCloseBsl), 2)
     pdiff <- round(amp / YCloseBsl, 4)
     duration <- round(abs(Xb2 - Xb1), 3)
     irrad <- sum(varInt[seq(b1,b2,timeSplit)]) * timeStep
-    interpBaseline <- stats::approx(x = c(timeInt[b1], timeInt[b2]), y = c(varInt[b1], varInt[b2]), xout = timeInt[seq(b1,b2,timeSplit)])
+    interpBaseline <- stats::approx(x = c(timeInt[b1], timeInt[b2]),
+                                    y = c(varInt[b1], varInt[b2]),
+                                    xout = timeInt[seq(b1, b2, timeSplit)])
     irradBaseline <- sum(interpBaseline$y) * timeStep
     irradSunfleck <- irrad - irradBaseline
 
     # If fleck pass criteria, then trim and recalculate
-    if(duration > minTime & amp > minAmp & pdiff > minPdiff)
-    {
+    if (duration > minTime & amp > minAmp & pdiff > minPdiff) {
       # Left trimming
       it = 0 ; trimLeft = 0 ; old_trimLeft = 1
-      while(old_trimLeft != trimLeft)
-      {
+      while (old_trimLeft != trimLeft) {
         it = it + 1
 
         if(b1 + it * timeSplit < length(varInt)){
-          Yk1 = round(varInt[b1 + it * timeSplit],2)
-          Xk1 = round(timeInt[b1 + it * timeSplit],3)
+          Yk1 = round(varInt[b1 + it * timeSplit], 2)
+          Xk1 = round(timeInt[b1 + it * timeSplit], 3)
 
           old_trimLeft <- trimLeft
-          if(stats::sd(c(Yb1,Yk1)) / mean(c(Yb1,Yk1)) < trimCV){trimLeft = trimLeft + 1}
+          if (stats::sd(c(Yb1, Yk1)) / mean(c(Yb1, Yk1)) < trimCV) {
+            trimLeft = trimLeft + 1
+          }
 
           # If trimming goes too far, abandon trimming
-          if(Xk1 == Xp){trimLeft = 0 ; old_trimLeft = 0}
+          if (Xk1 == Xp) {
+            trimLeft = 0
+            old_trimLeft = 0
+          }
         } else {
-          trimLeft = 0 ; old_trimLeft = 0
+          trimLeft = 0
+          old_trimLeft = 0
         }
       }
 
       # Right trimming
-      it = 0 ; trimRight = 0 ; old_trimRight = 1
-      while(old_trimRight != trimRight)
-      {
+      it = 0
+      trimRight = 0
+      old_trimRight = 1
+      while (old_trimRight != trimRight) {
         it = it + 1
-        if(b2 - it * timeSplit > 0){
-          Yk2 = round(varInt[b2 - it * timeSplit],2)
-          Xk2 = round(timeInt[b2 - it * timeSplit],3)
+        if (b2 - it * timeSplit > 0) {
+          Yk2 = round(varInt[b2 - it * timeSplit], 2)
+          Xk2 = round(timeInt[b2 - it * timeSplit], 3)
 
           old_trimRight <- trimRight
-          if(stats::sd(c(Yb2,Yk2)) / mean(c(Yb2,Yk2)) < trimCV){trimRight = trimRight + 1}
+          if (stats::sd(c(Yb2,Yk2)) / mean(c(Yb2,Yk2)) < trimCV) {
+            trimRight = trimRight + 1
+          }
 
           # If trimming goes too far, abandon trimming
-          if(Xk2 == Xp){trimRight = 0 ; old_trimRight = 0}
+          if (Xk2 == Xp) {
+            trimRight = 0
+            old_trimRight = 0
+          }
         } else {
-          trimRight = 0 ; old_trimRight = 0
+          trimRight = 0
+          old_trimRight = 0
         }
       }
 
@@ -223,7 +254,10 @@ find_flecks <- function(time,
       b2_new <- b2 - trimRight * timeSplit
 
       # Another safeguard for trimming
-      if(b2_new > b1_new){b1 <- b1_new ; b2 <- b2_new}
+      if (b2_new > b1_new) {
+        b1 <- b1_new
+        b2 <- b2_new
+      }
 
       Xb1 <- round(timeInt[b1], 3)
       Xb2 <- round(timeInt[b2], 3)
@@ -231,52 +265,74 @@ find_flecks <- function(time,
       Yb2 <- round(varInt[b2], 2)
 
       # Final calculation of fleck data
-      if(ASYMMETRIC == TRUE)
-      {
-        if(asmMethod == "max" & shadeflecks == TRUE){Ybaseline <-  max(c(Yb1, Yb2))}
-        if(asmMethod == "max" & shadeflecks == FALSE){Ybaseline <-  min(c(Yb1, Yb2))}
-        if(asmMethod == "mean"){Ybaseline <- mean(c(Yb1, Yb2))}
-
+      if(ASYMMETRIC == TRUE) {
+        if (asmMethod == "max" & shadeflecks == TRUE) {
+          Ybaseline <-  max(c(Yb1, Yb2))
+        }
+        if (asmMethod == "max" & shadeflecks == FALSE) {
+          Ybaseline <-  min(c(Yb1, Yb2))
+        }
+        if (asmMethod == "mean") {
+          Ybaseline <- mean(c(Yb1, Yb2))
+        }
       } else {
         Ybaseline <- mean(c(Yb1, Yb2))
       }
       amp <- round(abs(Yp - Ybaseline), 2)
-      relAmp <- round(abs(((Yp - bounds[1]) / (bounds[2] - bounds[1])) - ((Ybaseline - bounds[1]) / (bounds[2] - bounds[1]))),4)
+      relAmp <- round(abs(((Yp - bounds[1]) / (bounds[2] - bounds[1])) -
+                            ((Ybaseline - bounds[1]) / (bounds[2] - bounds[1]))),
+                      4)
       pdiff <- round(amp / Ybaseline, 4)
       duration <- round(abs(Xb2 - Xb1), 3)
 
       irrad <- sum(varInt[seq(b1,b2,timeSplit)]) * timeStep
-      interpBaseline <- stats::approx(x = c(timeInt[b1], timeInt[b2]), y = c(varInt[b1], varInt[b2]), xout = timeInt[seq(b1,b2,timeSplit)])
+      interpBaseline <- stats::approx(x = c(timeInt[b1], timeInt[b2]),
+                                      y = c(varInt[b1], varInt[b2]),
+                                      xout = timeInt[seq(b1, b2, timeSplit)])
       irradBaseline <- sum(interpBaseline$y) * timeStep
       irradSunfleck <- irrad - irradBaseline
 
-      relIrrad <- sum((varInt[seq(b1,b2,timeSplit)] - bounds[1]) / (bounds[2] - bounds[1]))
-      relBaseline  <- sum((interpBaseline$y - bounds[1]) / (bounds[2] - bounds[1]))
+      relIrrad <- sum((varInt[seq(b1, b2, timeSplit)] -
+                         bounds[1]) / (bounds[2] - bounds[1]))
+      relBaseline  <- sum((interpBaseline$y - bounds[1]) /
+                            (bounds[2] - bounds[1]))
       relIrradSunfleck <- relIrrad - relBaseline
 
-      # Log data (May have to reverse trimming if conditions is not satisfied anymore, will see later)
-      no = no + 1
-      row <- c(no, Xp, Yp, Yb1, Yb2, Ybaseline, amp, relAmp, pdiff, duration, irradSunfleck, relIrradSunfleck, irrad, Xb1, Xb2, ifelse(ASYMMETRIC==T, "asymmetric", "symmetric"), zeroes[newi+1])
+      # Log data (May have to reverse trimming if conditions is not satisfied
+      # anymore, will see later)
+      no <- no + 1
+      row <- c(no, Xp, Yp, Yb1, Yb2, Ybaseline, amp, relAmp, pdiff, duration,
+               irradSunfleck, relIrradSunfleck, irrad, Xb1, Xb2,
+               ifelse(ASYMMETRIC == T, "asymmetric", "symmetric"),
+               zeroes[newi + 1])
 
-      for(j in 1:length(row))
-      {
+      for (j in 1:length(row)) {
         l0[[j]][no] <- row[j]
       }
 
-      if(flag == 1 & verbose == TRUE){
+      if (flag == 1 & verbose == TRUE) {
         cat("asymmetry found in no", no, "\n")
       }
     }
   }
+
   df0 <- as.data.frame(l0)
-  df0 <- df0[!(is.na(df0[,1])),]
-  for(i in 1:15)
-  {
-    df0[,i] <- as.numeric(df0[,i])
+  df0 <- df0[!(is.na(df0[ , 1])),]
+
+  for(i in 1:15) {
+    df0[ , i] <- as.numeric(df0[ , i])
   }
 
-  if(nrow(df0) == 0){stop("No sun/shade-fleck found. Try with different min parameters.")}
-  colnames(df0) <-  c("no", "peakTime", "peak", "baseline1", "baseline2", "baseline", "amplitude", "relAmp", "percDiff", "duration", "irradGain", "relIrrad", "irradTot", "baselineTime1", "baselineTime2", "symmetry", "z")
+  if (nrow(df0) == 0) {
+    stop("No sun/shade-fleck found. Try with different min parameters.")
+  }
+  colnames(df0) <-  c("no", "peakTime", "peak",
+                      "baseline1", "baseline2", "baseline",
+                      "amplitude", "relAmp",
+                      "percDiff", "duration",
+                      "irradGain", "relIrrad", "irradTot",
+                      "baselineTime1", "baselineTime2",
+                      "symmetry", "z")
 
   # Remove overlapping sunflecks
   for(iROW in 1:nrow(df0))

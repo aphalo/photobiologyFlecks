@@ -57,7 +57,6 @@
 #'
 denoise_chunks <- function(data,
                            time.name = "TIMESTAMP",
-                           time.step = NULL,
                            qty.name = NULL,
                            absolute.threshold = 0,
                            relative.threshold = 0.05,
@@ -81,11 +80,6 @@ denoise_chunks <- function(data,
            class(data)[1], "'")
     }
   }
-  if (is.null(time.step)) {
-    time.step <- data[[time.name]][2] - data[[time.name]][1]
-  }
-  relative.threshold <- relative.threshold * time.step
-  absolute.threshold <- absolute.threshold * time.step
   col.names <- colnames(data)
   qty.name <- gsub("\\.diff$", "", qty.name)
   qty.name <- check_colnames(col.names = col.names,
@@ -123,7 +117,6 @@ denoise_chunks <- function(data,
 #' @param x numeric vector Supplying the range of data before computing
 #'   differences, or the data themselves.
 #' @param x.diff numeric vector The running differences to be de noised.
-#' @param time.step numeric The duration in seconds of one time step.
 #' @param absolute.threshold numeric The largest difference values to ignore,
 #'   i.e., to set to zero. Expressed as a change per second.
 #' @param relative.threshold numeric The multiplier to apply to the spread of
@@ -146,7 +139,6 @@ denoise_chunks <- function(data,
 #'
 denoise_diffs <- function(x,
                           x.diff,
-                          time.step = NULL,
                           absolute.threshold = 0,
                           relative.threshold = 0.05,
                           range.baseline = 0) {

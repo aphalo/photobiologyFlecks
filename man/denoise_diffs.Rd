@@ -7,7 +7,6 @@
 denoise_diffs(
   x,
   x.diff,
-  time.step = NULL,
   absolute.threshold = 0,
   relative.threshold = 0.05,
   range.baseline = 0
@@ -18,8 +17,6 @@ denoise_diffs(
 differences, or the data themselves.}
 
 \item{x.diff}{numeric vector The running differences to be de noised.}
-
-\item{time.step}{numeric The duration in seconds of one time step.}
 
 \item{absolute.threshold}{numeric The largest difference values to ignore,
 i.e., to set to zero. Expressed as a change per second.}

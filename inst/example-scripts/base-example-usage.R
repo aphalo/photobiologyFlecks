@@ -6,20 +6,24 @@ file.path <- system.file("extdata", "example-oat.csv", package = "photobiologyFl
 df <- read.csv(file.path, row.names = 1)
 
 df1 <- df[df$height == "low",]
-df2 <- df[df$height == "mid",]
-df3 <- df[df$height == "top",]
+# df2 <- df[df$height == "mid",]
+# df3 <- df[df$height == "top",]
 
-dfX <- df1
-Z <- find_zeros(time = dfX$Time,
-                var = dfX$PAR_q)
-dfS <- find_flecks(time = dfX$Time,
-                   var = dfX$PAR_q,
+# plot data
+plot(formula = PAR_q ~ Time, data = df1, type = "l", lwd = 0.5)
+
+Z <- find_zeros(time = df1$Time,
+                var = df1$PAR_q)
+
+dfS <- find_flecks(time = df1$Time,
+                   var = df1$PAR_q,
                    zeroes = Z,
                    minTime = 0, minAmp = 5, minPdiff = 0.05,
                    shadeflecks = FALSE,
                    asmMethod = "max",
                    verbose = FALSE)
-plot_ts_fleck(time = dfX$Time,
-              var = dfX$PAR_q,
+
+plot_ts_fleck(time = df1$Time,
+              var = df1$PAR_q,
               zeroes = Z,
               fleck.data = dfS)

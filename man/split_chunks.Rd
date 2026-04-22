@@ -8,7 +8,8 @@ split_chunks(
   data,
   time.name = "TIMESTAMP",
   qty.name = NULL,
-  step.len,
+  time.step = NULL,
+  chunk.min.time,
   chunk.min.rows = 2,
   add.diffs = TRUE,
   verbose = FALSE,
@@ -26,8 +27,11 @@ containing time stamps for the observations.}
 containing values observed quantities. If \code{qty.name = NULL}, the
 default, all columns are retained.}
 
-\item{step.len}{numeric or duration Length of minimum time step length
-between data chunks. If numeric, expressed in seconds.}
+\item{time.step}{numeric The duration in seconds of one time step within a
+chunk. If \code{NULL}, the actual time steps are used.}
+
+\item{chunk.min.time}{numeric or duration Length of minimum time step
+length between data chunks. If numeric, expressed in seconds.}
 
 \item{chunk.min.rows}{integer The minimum number of rows that a chunk must
 have not to be discarded.}

@@ -3,11 +3,13 @@
 #' Split a time series stored in a data frame at breaks (long time steps),
 #'   returning a list of data frames or data chunks.
 #'
+#' @inheritParams check_colnames
 #' @param data data.frame Containing at least one coloumn with time stamps and
 #'   one column with a measured quantity.
-#' @param step.len numeric or duration Length of minimum time step length
-#'   between data chunks. If numeric, expressed in seconds.
-#' @inheritParams check_colnames
+#' @param time.step numeric The duration in seconds of one time step within a
+#'   chunk. If \code{NULL}, the actual time steps are used.
+#' @param chunk.min.time numeric or duration Length of minimum time step
+#'   length between data chunks. If numeric, expressed in seconds.
 #' @param chunk.min.rows integer The minimum number of rows that a chunk must
 #'   have not to be discarded.
 #' @param add.diffs logical Flag indicating if values returned by
@@ -58,7 +60,8 @@ split_chunks <-
   function(data,
            time.name = "TIMESTAMP",
            qty.name = NULL,
-           step.len,
+           time.step = NULL,
+           chunk.min.time,
            chunk.min.rows = 2,
            add.diffs = TRUE,
            verbose = FALSE,
@@ -79,22 +82,28 @@ split_chunks <-
 
     # find discontinuities in the time vector
     time.diffs <- diff(data[[time.name]])
-    if (!any(time.diffs < step.len)) {
-      message("Found no chunks, all steps > ", step.len, " s")
+    if (!any(time.diffs < chunk.min.time)) {
+      message("Found no chunks, all steps > ", chunk.min.time, " s")
       return(list())
     }
     if (add.diffs) {
       time.diff.name <- paste(time.name, "diff", sep = ".")
       data[[time.diff.name]] <- c(NA, time.diffs)
       for (q in qty.name) {
-        data[[paste(q, "diff", sep = ".")]] <-
+        var.name <- paste(q, "diff", sep = ".")
+        data[[var.name]] <-
           ifelse(is.na(data[[time.diff.name]]) |
-                   data[[time.diff.name]] > step.len,
+                   data[[time.diff.name]] > chunk.min.time,
                  NA,
                  c(NA, diff(data[[q]])))
+        if (!is.null(time.step)) {
+          data[[var.name]] <- data[[var.name]] / time.step
+        } else {
+          data[[var.name]] <- data[[var.name]] / data[[time.diff.name]]
+        }
       }
     }
-    gaps_at <- which(time.diffs > step.len) + 1
+    gaps_at <- which(time.diffs > chunk.min.time) + 1
     gaps_at <- c(1, gaps_at, nrow(data) + 1)
 
     chunks.ls <- list()

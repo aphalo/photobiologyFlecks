@@ -20,8 +20,13 @@ plot_ts_fleck <- function(time,
                           var,
                           zeroes,
                           fleck.data = FALSE,
-                          timeSplit = 10)
+                          timeSplit = 10,
+                          ask = FALSE)
 {
+  old.ask <- devAskNewPage()
+  on.exit(devAskNewPage(old.ask))
+  devAskNewPage(ask = ask)
+
   timeFrames <- length(time) / 100
   timeStep <- time[2] - time[1]
   timeTot <- max(time)
@@ -30,14 +35,9 @@ plot_ts_fleck <- function(time,
   int <- stats::approx(x = time, y = var, xout = x_out)
   dev <- calDev(x = int$x, y = int$y)
 
-  if (length(fleck.data) > 1) {
-    ifleck.data = TRUE
-  } else {
-    ifleck.data = FALSE
-  }
+  ifleck.data <- length(fleck.data) > 1
 
-  for(iTime in 1:timeFrames)
-  {
+  for (iTime in 1:timeFrames) {
     minTime <- (iTime - 1) * (timeTot / timeFrames)
     maxTime <- (iTime) * (timeTot / timeFrames)
 
@@ -50,7 +50,7 @@ plot_ts_fleck <- function(time,
          xlim = c(minTime, maxTime))
     #graphics::abline(v = z * timeStep / timeSplit, col = "gray80", lty = 2)
     graphics::points(var ~ time, type = "o", pch = 20, lwd = 1, col = "gray20")
-    if(ifleck.data == TRUE){
+    if (ifleck.data) {
       graphics::points(baseline1 ~ baselineTime1, data = fleck.data,
                        type = "p", pch = 20, col = "chartreuse3")
       graphics::points(baseline2 ~ baselineTime2, data = fleck.data,

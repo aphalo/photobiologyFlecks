@@ -59,6 +59,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(dplyr)
+library(photobiology)
 library(photobiologyInOut)
 library(photobiologyFlecks)
 library(ggplot2)
@@ -73,7 +74,7 @@ head(three_chunks.tb)
 ```
 
 ```{r}
-plot(three_chunks.tb)
+plot(three_chunks.tb, cex = 0.1)
 ```
 
 ## Split data into chunks
@@ -86,7 +87,7 @@ chunks.ls <-
   split_chunks(three_chunks.tb,
                time.name = "time",
                qty.name = NULL,
-               step.len = 0.051,
+               chunk.min.time = 0.051,
                chunk.min.rows = 1.8e4,
                verbose = FALSE)
 ```
@@ -100,6 +101,10 @@ nchunks_found <- length(chunks.ls)
 
 ```{r}
 str(chunks.ls, give.attr = FALSE)
+```
+```{r}
+plot(Q_PAR ~ time, data = chunks.ls[[1]], type = "l", lwd = 0.5)
+plot(Q_PAR.diff ~ time, data = chunks.ls[[1]], type = "l", lwd = 0.5)
 ```
 
 ## Summaries
@@ -142,16 +147,19 @@ We use `relative.threshold = 0.20` $\mu mol\,m^{-2}\,s^{-2}$ as the minimum rate
   chunks_dn.ls <- 
     denoise_chunks(chunks.ls, 
                    time.name = "time",
-                   time.step = 0.05,
-                   relative.threshold = 0.05, 
+                   relative.threshold = 0.0067, 
                    add.signs = TRUE)
 ```
+
+```{r}
+plot(Q_PAR.diff ~ time, data = chunks_dn.ls[[1]], type = "l", lwd = 0.5)
+```
+
 In a continuous time series without noise, the derivative is equal to zero at the point where the slope changes sign. In a time series measured at discrete time points, a change in sign must be used as well as a zero value to locate maxima and minima, as the change in slope is most likely to land in-between two time points.
 
 Once de-noised, changes in slope can be detected using `sign()` to discretize the data into values indicating decrease (-1) , no-change (0) and increase (+1).
 
-Considering the first burst of PAR measurements, we find 597 time steps with
-change in irradiance.
+Considering each of the three bursts of PAR measurements, we find many time intervals with a detectable change in irradiance.
 
 ```{r}
 # time steps with no change
@@ -179,7 +187,8 @@ sum(chunks_dn.ls[[3]]$Q_PAR.diff > 0.01, na.rm = TRUE)
 sum(chunks_dn.ls[[3]]$Q_PAR.diff > 0.01, na.rm = TRUE)
 ```
 
-Subsequently, changes in slope can be located using `rle()`. In this example all differences are smaller than 5 per thousand of the mean irradiance.
+Subsequently, changes in slope can be located using `rle()`. In this example all differences smaller than 1 % of the mean irradiance per second were discarded as
+noise.
 
 ```{r}
 sign_changes.ls <- list()
@@ -205,6 +214,42 @@ sum(sign_changes.ls[[3]][["rle"]][["lengths"]])
 
 ```{r}
 sign_changes.ls
+```
+### Durand's et al. algorithm
+
+```{r}
+# keep all qty columns, do not add differences
+chunks.ls <-
+  split_chunks(three_chunks.tb,
+               time.name = "time",
+               qty.name = NULL,
+               chunk.min.time = 0.051,
+               chunk.min.rows = 1.8e4,
+               add.diffs = FALSE,
+               verbose = FALSE)
+```
+
+```{r}
+chunk <- chunks.ls[[1]]
+chunk$tod <- as_tod(chunk$time, unit.out = "seconds")
+chunk$chuck.time <- chunk$tod - chunk$tod[1]
+
+Z <- find_zeros(time = chunk$chuck.time,
+                var = chunk$Q_PAR)
+dfS <- find_flecks(time = chunk$chuck.time,
+                   var = chunk$Q_PAR,
+                   zeroes = Z,
+                   minTime = 0, 
+                   minAmp = 5, 
+                   minPdiff = 0.05,
+                   asymmetry = 1/4,
+                   shadeflecks = FALSE,
+                   asmMethod = "max",
+                   verbose = FALSE)
+plot_ts_fleck(time = chunk$chuck.time,
+              var = chunk$Q_PAR,
+              zeroes = Z,
+              fleck.data = dfS)
 ```
 
 ### Using a reference

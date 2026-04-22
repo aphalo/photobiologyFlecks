@@ -4,7 +4,14 @@
 \alias{plot_ts_fleck}
 \title{Plot time series of all found flecks.}
 \usage{
-plot_ts_fleck(time, var, zeroes, fleck.data = FALSE, timeSplit = 10)
+plot_ts_fleck(
+  time,
+  var,
+  zeroes,
+  fleck.data = FALSE,
+  timeSplit = 10,
+  ask = FALSE
+)
 }
 \arguments{
 \item{time}{numeric Vector of times from the time-series (\emph{x}-axis).}
