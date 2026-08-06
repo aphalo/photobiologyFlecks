@@ -1,7 +1,8 @@
 #' Split data frame into chunks
 #'
 #' Split a time series stored in a data frame at breaks (long time steps),
-#'   returning a list of data frames or data chunks.
+#'   returning a list of data frames or data chunks or a grouping integer
+#'   vector.
 #'
 #' @inheritParams check_colnames
 #' @param data data.frame Containing at least one coloumn with time stamps and
@@ -48,11 +49,17 @@
 #'   The number of chunks in the returned list of data frames and their lengths
 #'   are reported in a \code{\link{message}()}.
 #'
-#' @return A list of data frames of varying length, depending on the number of
-#'   chunks found, possibly of length zero. The members of the list are named
-#'   based on the starting time of each chunk. The variables included in the
-#'   member data frames are those named by \code{time.name} and \code{qty.name}
-#'   and optionally, their running differences.
+#' @return \code{split_chunks()} returns a list of data frames of varying
+#'   length, depending on the number of chunks found, possibly of length zero.
+#'   The members of the list are named based on the starting time of each chunk.
+#'   The variables included in the member data frames are those named by
+#'   \code{time.name} and \code{qty.name} and optionally, their running
+#'   differences.
+#'
+#'   \code{group_chunks()} returns by default an integer vector of length equal to the
+#'   number of rows in \code{x}. The vector is suitable for grouping, as a
+#'   different integer is assigned to each chunk, and \code{NA} is used to
+#'   indicate observations that do not belong to chunks.
 #'
 #' @export
 #'
@@ -126,12 +133,60 @@ split_chunks <-
       i <- i + 1
     }
     if (length(chunks.ls)) {
-      chunk.rows <- rle(unname(sort(sapply(chunks.ls, nrow, USE.NAMES = FALSE))))
-      message("Found ", sum(chunk.rows[["lengths"]]), " chunks with length(s) ",
-              paste(chunk.rows[["values"]], collapse = ", "))
+      message("Found ", length(chunks.ls),
+              " chunks with >= ", chunk.min.rows, " rows")
     } else {
       message("Found no chunks with >= ", chunk.min.rows, " rows")
     }
     chunks.ls
   }
 
+#' @rdname split_chunks
+#'
+#' @export
+#'
+group_chunks <-
+  function(data,
+           time.name = "TIMESTAMP",
+           qty.name = NULL,
+           time.step = NULL,
+           chunk.min.time,
+           chunk.min.rows = 2,
+           add.diffs = TRUE,
+           verbose = FALSE,
+           return = "idxs",
+           na.rm = TRUE) {
+    if (!is.data.frame(data)) {
+      stop("'data' must be a data.frame, not a'", class(data)[1], "'")
+    } else if (nrow(data) <= 1L) {
+      message("Found no chunks in 'data' with, ", nrow(data), " rows")
+      return(list())
+    }
+    qty.name <- check_colnames(col.names = colnames(data),
+                               time.name = time.name,
+                               qty.name = qty.name)
+    data <- data[ , c(time.name, qty.name)]
+    if (na.rm) {
+      data <- stats::na.omit(data)
+    }
+
+    # find discontinuities in the time vector
+    time.diffs <- diff(data[[time.name]])
+    if (!any(time.diffs < chunk.min.time)) {
+      message("Found no chunks, all steps > ", chunk.min.time, " s")
+      return(rep(NA_integer_, nrow(data)))
+    }
+    gaps_at <- which(time.diffs > chunk.min.time) + 1
+    gaps_at <- c(1, gaps_at, nrow(data))
+    chunk.lengths <- diff(gaps_at)
+    chunk.idxs <- seq_along(chunk.lengths)
+    chunk.idxs[chunk.lengths < chunk.min.rows] <- NA_integer_
+    if (!all(is.na(chunk.idxs))) {
+      message("Found ", length(na.omit(chunk.idxs)),
+              " chunks with length(s) in [",
+              paste(range(chunk.lengths, na.rm = TRUE), collapse = ".."), "]")
+    } else {
+      message("Found no chunks with >= ", chunk.min.rows, " rows")
+    }
+    rep(chunk.idxs, times = chunk.lengths)
+  }

@@ -2,6 +2,7 @@
 % Please edit documentation in R/split-chunks.R
 \name{split_chunks}
 \alias{split_chunks}
+\alias{group_chunks}
 \title{Split data frame into chunks}
 \usage{
 split_chunks(
@@ -13,6 +14,19 @@ split_chunks(
   chunk.min.rows = 2,
   add.diffs = TRUE,
   verbose = FALSE,
+  na.rm = TRUE
+)
+
+group_chunks(
+  data,
+  time.name = "TIMESTAMP",
+  qty.name = NULL,
+  time.step = NULL,
+  chunk.min.time,
+  chunk.min.rows = 2,
+  add.diffs = TRUE,
+  verbose = FALSE,
+  return = "idxs",
   na.rm = TRUE
 )
 }
@@ -46,15 +60,22 @@ Useful for debugging.}
 after selecting variables.}
 }
 \value{
-A list of data frames of varying length, depending on the number of
-  chunks found, possibly of length zero. The members of the list are named
-  based on the starting time of each chunk. The variables included in the
-  member data frames are those named by \code{time.name} and \code{qty.name}
-  and optionally, their running differences.
+\code{split_chunks()} returns a list of data frames of varying
+  length, depending on the number of chunks found, possibly of length zero.
+  The members of the list are named based on the starting time of each chunk.
+  The variables included in the member data frames are those named by
+  \code{time.name} and \code{qty.name} and optionally, their running
+  differences.
+
+  \code{group_chunks()} returns by default an integer vector of length equal to the
+  number of rows in \code{x}. The vector is suitable for grouping, as a
+  different integer is assigned to each chunk, and \code{NA} is used to
+  indicate observations that do not belong to chunks.
 }
 \description{
 Split a time series stored in a data frame at breaks (long time steps),
-  returning a list of data frames or data chunks.
+  returning a list of data frames or data chunks or a grouping integer
+  vector.
 }
 \details{
 When time series of data are acquired in bursts or chunks separated

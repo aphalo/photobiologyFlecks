@@ -1,8 +1,8 @@
 Package: photobiologyFlecks
 Type: Package
-Title: Analysis of sun- and shade flecks
-Version: 0.0.0.9000
-Date: 2026-04-22
+Title: Analysis of sun-, cloud- and shade flecks
+Version: 0.0.0.9001
+Date: 2026-08-06
 Authors@R: c(
     person("Pedro J.", "Aphalo", 
            email = "pedro.aphalo@helsinki.fi", 
@@ -23,7 +23,6 @@ LazyData: true
 Encoding: UTF-8
 URL: https://docs.r4photobiology.info/photobiologyFlecks/
 BugReports: https://github.com/aphalo/photobiologyFlecks/issues/
-RoxygenNote: 7.3.3
 Requires:
     R (>= 4.4.0)
 Imports:
@@ -43,3 +42,4 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: rmarkdown
+Config/roxygen2/version: 8.0.0

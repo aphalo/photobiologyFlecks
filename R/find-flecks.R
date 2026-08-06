@@ -371,7 +371,7 @@ find_flecks <- function(time,
     {
       if(df0[iROW,"peak"] < df0[iROW+1,"peak"]){iRM <- df0[iROW,"no"]} else {iRM <- df0[iROW+1,"no"]}
       df0 <- df0[!df0$no == iRM,]
-      if(verbose == TRUE){cat("Removed fleck no", iRM, "because of overlap", "\n")}
+      if (verbose == TRUE) {cat("Removed fleck no ", iRM, " because of overlap\n")}
     }
   }
 

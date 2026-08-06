@@ -108,6 +108,23 @@ plot(Q_PAR ~ time, data = chunks.ls[[1]], type = "l", lwd = 0.5)
 plot(Q_PAR.diff ~ time, data = chunks.ls[[1]], type = "l", lwd = 0.5)
 ```
 
+## Grouping
+
+Instead of splitting the data as in the section above, an indexing vector
+can be used to do computations in place with fast functions from R package
+'collapse'. Given the size of the data sets this could be worthwhile.
+
+```{r}
+# generate a vector suitable for grouping
+chunks.grp <-
+  group_chunks(three_chunks.tb,
+               time.name = "time",
+               qty.name = NULL,
+               chunk.min.time = 0.051,
+               chunk.min.rows = 1.8e4,
+               verbose = FALSE)
+unique(chunks.grp)
+```
 ## Summaries
 
 ### Statistics
