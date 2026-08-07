@@ -2,7 +2,7 @@ Package: photobiologyFlecks
 Type: Package
 Title: Analysis of sun-, cloud- and shade flecks
 Version: 0.0.0.9001
-Date: 2026-08-06
+Date: 2026-08-07
 Authors@R: c(
     person("Pedro J.", "Aphalo", 
            email = "pedro.aphalo@helsinki.fi", 
@@ -28,6 +28,7 @@ Requires:
 Imports:
     utils,
     stats,
+    collapse,
     dplyr (>= 1.1.0),
     anytime (>= 0.3.10),
     lubridate (>= 1.9.4),
