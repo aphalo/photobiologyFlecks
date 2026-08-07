@@ -4,7 +4,7 @@
 \name{photobiologyFlecks-package}
 \alias{photobiologyFlecks}
 \alias{photobiologyFlecks-package}
-\title{photobiologyFlecks: Analysis of sun- and shade flecks}
+\title{photobiologyFlecks: Analysis of sun-, cloud- and shade flecks}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
@@ -28,6 +28,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Pedro J. Aphalo \email{pedro.aphalo@helsinki.fi} (\href{https://orcid.org/0000-0003-3385-972X}{ORCID})
   \item Maxime Durand \email{maxime.durand@universite-paris-saclay.fr} (\href{https://orcid.org/0000-0002-8991-3601}{ORCID})
 }
 

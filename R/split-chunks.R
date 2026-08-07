@@ -1,7 +1,8 @@
 #' Split data frame into chunks
 #'
 #' Split a time series stored in a data frame at breaks (long time steps),
-#'   returning a list of data frames or data chunks.
+#'   returning a list of data frames or data chunks or a grouping integer
+#'   vector.
 #'
 #' @inheritParams check_colnames
 #' @param data data.frame Containing at least one coloumn with time stamps and
@@ -22,11 +23,12 @@
 #'   Useful for debugging.
 #'
 #' @details When time series of data are acquired in bursts or chunks separated
-#'   by longer time intervals it can be useful to extract the chunks into
-#'   separate data frames before further analysis. This implementation does not
-#'   assume the same duration for all chunks or the gaps, it searches for time
-#'   intervals longer than a threshold duration and splits the data at these
-#'   points. If the data contains no gaps, the whole data is returned as a
+#'   by longer time intervals it can be useful to extract or group the
+#'   observations from the individual chunks before further analysis. This
+#'   implementation does not assume the same duration for all chunks or all the
+#'   gaps, it searches for time intervals longer than a threshold duration to
+#'   detect the chunk boundaries. Multiple spaced observations in between chunks
+#'   are ignored. If the data contains no gaps, the whole data is returned as a
 #'   single chunk.
 #'
 #'   When a minimum length for the individuals chunks is set with an argument to
@@ -35,26 +37,99 @@
 #'
 #'   With \code{add.diffs = TRUE} the running differences between values in the
 #'   current row and the one above are added to the returned data frames. The
-#'   value in the first row is \code{NA} for running differences, except for
-#'   the time, in which case it is the time difference to the precceeding value
-#'   in \code{data}.
+#'   value in the first row is \code{NA} for running differences. Differences
+#'   in variables other than time are divided by the corresponding time
+#'   differences, with changes expressed as a rate per second.
 #'
-#'   Method \code{\link{diff}()} must be available for the class of the variable
+#'   Method \code{\link{fdiff}()} must be available for the class of the variable
 #'   named by the argument to \code{time.name}. The class of this column is in
 #'   most cases numeric, date, or time. If \code{add.diffs = TRUE} this
 #'   requirement also applies to the variable(s) named by the argument passed to
 #'   \code{qty.name}.
 #'
-#'   The number of chunks in the returned list of data frames and their lengths
-#'   are reported in a \code{\link{message}()}.
+#'   The number of chunks in the returned list of data frames and the range of
+#'   their lengths are reported in a \code{\link{message}()} when \code{verbose
+#'   = TRUE}.
 #'
-#' @return A list of data frames of varying length, depending on the number of
-#'   chunks found, possibly of length zero. The members of the list are named
-#'   based on the starting time of each chunk. The variables included in the
-#'   member data frames are those named by \code{time.name} and \code{qty.name}
-#'   and optionally, their running differences.
+#'   The current implementation relies on R package 'collapse' as the
+#'   expectation is that \code{data} will be a large data frame.
+#'   \code{split_chunks()} returns a list of data frames, one
+#'   data frame per chunk, named with their starting time.
+#'
+#'   When using 'collapse' to summarise the data, it is much more efficient to
+#'   use \code{group_chunks()} to generate a grouping vector. This vector is of
+#'   the same length as rows has \code{data}, with rows not belonging to a chunk
+#'   indicated by \code{NA}. The functions from 'collapse' can compute very
+#'   efficiently various summaries.
+#'
+#'   Initial benchmarking and profiling of these functions was done on a
+#'   relatively small data frame of 54700 rows and a single measured variable.
+#'   In these tests, computing the grouping vector with \code{group_chunks()}
+#'   takes between 1/5 and 1/10 the time that it takes splitting the data frame
+#'   with \code{split_chunks()}. The performance depends on how the time is
+#'   stored, with numeric values being faster. Passing \code{na.rm = TRUE} also
+#'   slows down the computations.
+#'
+#' @note Storing the time as a numeric variable instead of as \code{POSIXct}
+#'   makes computations faster, specially in \code{split_chunks()}.
+#'
+#' @return \code{split_chunks()} returns a list of data frames of varying
+#'   length, depending on the number of chunks found, possibly of length zero.
+#'   The members of the list are named based on the starting time of each chunk.
+#'   The variables included in the member data frames are those named by
+#'   \code{time.name} and \code{qty.name} and optionally, their running
+#'   differences.
+#'
+#'   \code{group_chunks()} returns by default an integer vector of length equal
+#'   to the number of rows in \code{x}. The vector is suitable for grouping, as
+#'   a different integer is assigned to each chunk, and \code{NA} is used to
+#'   indicate observations that do not belong to chunks. Alternatively, it can
+#'   return a \code{POSIXct} vector with the starting time of each individual
+#'   chunk.
 #'
 #' @export
+#'
+#' @examples
+#' # keep all qty columns, add differences
+#' chunks.ls <-
+#'   split_chunks(three_chunks.tb,
+#'                time.name = "time",
+#'                qty.name = NULL,
+#'                chunk.min.time = 0.051,
+#'                chunk.min.rows = 1.8e4,
+#'                verbose = FALSE)
+#' str(chunks.ls)
+#'
+#' # generate an integer vector suitable for grouping
+#' chunks.grp <-
+#' group_chunks(three_chunks.tb,
+#'                time.name = "time",
+#'                qty.name = NULL,
+#'                chunk.min.time = 0.051,
+#'                chunk.min.rows = 1.8e4,
+#'                verbose = FALSE)
+#' str(chunks.grp)
+#' unique(chunks.grp)
+#'
+#' # return start times of chunks
+#' group_chunks(three_chunks.tb,
+#'                time.name = "time",
+#'                qty.name = NULL,
+#'                chunk.min.time = 0.051,
+#'                chunk.min.rows = 1.8e4,
+#'                verbose = FALSE,
+#'                returned.value = "start.times")
+#'
+#' # return list with both the grouting vector and the start times
+#' times_and_grouping.ls <-
+#'   group_chunks(three_chunks.tb,
+#'                time.name = "time",
+#'                qty.name = NULL,
+#'                chunk.min.time = 0.051,
+#'                chunk.min.rows = 1.8e4,
+#'                verbose = FALSE,
+#'                returned.value = "all")
+#' str(times_and_grouping.ls)
 #'
 split_chunks <-
   function(data,
@@ -65,7 +140,7 @@ split_chunks <-
            chunk.min.rows = 2,
            add.diffs = TRUE,
            verbose = FALSE,
-           na.rm = TRUE) {
+           na.rm = FALSE) {
     if (!is.data.frame(data)) {
       stop("'data' must be a data.frame, not a'", class(data)[1], "'")
     } else if (nrow(data) <= 1L) {
@@ -81,21 +156,21 @@ split_chunks <-
     }
 
     # find discontinuities in the time vector
-    time.diffs <- diff(data[[time.name]])
+    time.diffs <- as.numeric(collapse::fdiff(data[[time.name]]))
     if (!any(time.diffs < chunk.min.time)) {
       message("Found no chunks, all steps > ", chunk.min.time, " s")
       return(list())
     }
     if (add.diffs) {
       time.diff.name <- paste(time.name, "diff", sep = ".")
-      data[[time.diff.name]] <- c(NA, time.diffs)
+      data[[time.diff.name]] <- time.diffs
       for (q in qty.name) {
         var.name <- paste(q, "diff", sep = ".")
         data[[var.name]] <-
           ifelse(is.na(data[[time.diff.name]]) |
                    data[[time.diff.name]] > chunk.min.time,
                  NA,
-                 c(NA, diff(data[[q]])))
+                 c(NA, collapse::fdiff(data[[q]])))
         if (!is.null(time.step)) {
           data[[var.name]] <- data[[var.name]] / time.step
         } else {
@@ -126,12 +201,82 @@ split_chunks <-
       i <- i + 1
     }
     if (length(chunks.ls)) {
-      chunk.rows <- rle(unname(sort(sapply(chunks.ls, nrow, USE.NAMES = FALSE))))
-      message("Found ", sum(chunk.rows[["lengths"]]), " chunks with length(s) ",
-              paste(chunk.rows[["values"]], collapse = ", "))
+      if (verbose) {
+        message("Found ", length(chunks.ls),
+                " chunks with >= ", chunk.min.rows, " rows")
+      }
     } else {
       message("Found no chunks with >= ", chunk.min.rows, " rows")
     }
     chunks.ls
   }
 
+#' @rdname split_chunks
+#'
+#' @export
+#'
+group_chunks <-
+  function(data,
+           time.name = "TIMESTAMP",
+           qty.name = NULL,
+           time.step = NULL,
+           chunk.min.time,
+           chunk.min.rows = 2,
+           add.diffs = TRUE,
+           verbose = FALSE,
+           returned.value = "group.idxs",
+           na.rm = FALSE) {
+    if (!is.data.frame(data)) {
+      stop("'data' must be a data.frame, not a'", class(data)[1], "'")
+    } else if (nrow(data) <= 1L) {
+      message("Found no chunks in 'data' with, ", nrow(data), " rows")
+      return(list())
+    }
+    qty.name <- check_colnames(col.names = colnames(data),
+                               time.name = time.name,
+                               qty.name = qty.name)
+    data <- data[ , c(time.name, qty.name)]
+    if (na.rm) {
+      data <- collapse::na_omit(data)
+    }
+
+    # find discontinuities in the time vector
+    time.diffs <- collapse::fdiff(data[[time.name]])
+    if (!any(time.diffs < chunk.min.time)) {
+      message("Found no chunks, all steps > ", chunk.min.time, " s")
+      return(rep(NA_integer_, nrow(data)))
+    }
+    gaps_at <- which(time.diffs > chunk.min.time) + 1
+    gaps_at <- c(1, gaps_at, nrow(data) + 1)
+    chunk.lengths <- collapse::fdiff(gaps_at)[-1]
+    good.chunks <- chunk.lengths >= chunk.min.rows
+
+    if (returned.value != "group.idxs") {
+      chunk.start.times <- data[[time.name]][gaps_at][good.chunks]
+    }
+    chunk.idxs <- seq_along(chunk.lengths)
+    chunk.idxs[!good.chunks] <- NA_integer_
+    group.idxs <- rep(chunk.idxs, times = chunk.lengths)
+
+    if (!all(is.na(chunk.idxs))) {
+      if (verbose) {
+        message("Found ", length(na.omit(chunk.idxs)),
+                " chunks with length(s) in [",
+                paste(range(chunk.lengths, na.rm = TRUE), collapse = ".."), "]")
+      }
+    } else {
+      message("Found no chunks with >= ", chunk.min.rows, " rows")
+    }
+    if (returned.value == "group.idxs") {
+      group.idxs
+    } else if (returned.value == "start.times") {
+      chunk.start.times
+    } else if (returned.value == "all") {
+      list(start.times = chunk.start.times,
+           grouping = group.idxs)
+    } else {
+      warning("Bad argument!: 'returned.value = \"", returned.value, "\"'; ",
+              "expected: \"start.times\", \"group.idxs\", or \"all\"")
+      NA
+    }
+  }

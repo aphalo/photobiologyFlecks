@@ -2,6 +2,7 @@
 % Please edit documentation in R/split-chunks.R
 \name{split_chunks}
 \alias{split_chunks}
+\alias{group_chunks}
 \title{Split data frame into chunks}
 \usage{
 split_chunks(
@@ -13,7 +14,20 @@ split_chunks(
   chunk.min.rows = 2,
   add.diffs = TRUE,
   verbose = FALSE,
-  na.rm = TRUE
+  na.rm = FALSE
+)
+
+group_chunks(
+  data,
+  time.name = "TIMESTAMP",
+  qty.name = NULL,
+  time.step = NULL,
+  chunk.min.time,
+  chunk.min.rows = 2,
+  add.diffs = TRUE,
+  verbose = FALSE,
+  returned.value = "group.idxs",
+  na.rm = FALSE
 )
 }
 \arguments{
@@ -46,23 +60,33 @@ Useful for debugging.}
 after selecting variables.}
 }
 \value{
-A list of data frames of varying length, depending on the number of
-  chunks found, possibly of length zero. The members of the list are named
-  based on the starting time of each chunk. The variables included in the
-  member data frames are those named by \code{time.name} and \code{qty.name}
-  and optionally, their running differences.
+\code{split_chunks()} returns a list of data frames of varying
+  length, depending on the number of chunks found, possibly of length zero.
+  The members of the list are named based on the starting time of each chunk.
+  The variables included in the member data frames are those named by
+  \code{time.name} and \code{qty.name} and optionally, their running
+  differences.
+
+  \code{group_chunks()} returns by default an integer vector of length equal
+  to the number of rows in \code{x}. The vector is suitable for grouping, as
+  a different integer is assigned to each chunk, and \code{NA} is used to
+  indicate observations that do not belong to chunks. Alternatively, it can
+  return a \code{POSIXct} vector with the starting time of each individual
+  chunk.
 }
 \description{
 Split a time series stored in a data frame at breaks (long time steps),
-  returning a list of data frames or data chunks.
+  returning a list of data frames or data chunks or a grouping integer
+  vector.
 }
 \details{
 When time series of data are acquired in bursts or chunks separated
-  by longer time intervals it can be useful to extract the chunks into
-  separate data frames before further analysis. This implementation does not
-  assume the same duration for all chunks or the gaps, it searches for time
-  intervals longer than a threshold duration and splits the data at these
-  points. If the data contains no gaps, the whole data is returned as a
+  by longer time intervals it can be useful to extract or group the
+  observations from the individual chunks before further analysis. This
+  implementation does not assume the same duration for all chunks or all the
+  gaps, it searches for time intervals longer than a threshold duration to
+  detect the chunk boundaries. Multiple spaced observations in between chunks
+  are ignored. If the data contains no gaps, the whole data is returned as a
   single chunk.
 
   When a minimum length for the individuals chunks is set with an argument to
@@ -71,16 +95,83 @@ When time series of data are acquired in bursts or chunks separated
 
   With \code{add.diffs = TRUE} the running differences between values in the
   current row and the one above are added to the returned data frames. The
-  value in the first row is \code{NA} for running differences, except for
-  the time, in which case it is the time difference to the precceeding value
-  in \code{data}.
+  value in the first row is \code{NA} for running differences. Differences
+  in variables other than time are divided by the corresponding time
+  differences, with changes expressed as a rate per second.
 
-  Method \code{\link{diff}()} must be available for the class of the variable
+  Method \code{\link{fdiff}()} must be available for the class of the variable
   named by the argument to \code{time.name}. The class of this column is in
   most cases numeric, date, or time. If \code{add.diffs = TRUE} this
   requirement also applies to the variable(s) named by the argument passed to
   \code{qty.name}.
 
-  The number of chunks in the returned list of data frames and their lengths
-  are reported in a \code{\link{message}()}.
+  The number of chunks in the returned list of data frames and the range of
+  their lengths are reported in a \code{\link{message}()} when \code{verbose
+  = TRUE}.
+
+  The current implementation relies on R package 'collapse' as the
+  expectation is that \code{data} will be a large data frame.
+  \code{split_chunks()} returns a list of data frames, one
+  data frame per chunk, named with their starting time.
+
+  When using 'collapse' to summarise the data, it is much more efficient to
+  use \code{group_chunks()} to generate a grouping vector. This vector is of
+  the same length as rows has \code{data}, with rows not belonging to a chunk
+  indicated by \code{NA}. The functions from 'collapse' can compute very
+  efficiently various summaries.
+
+  Initial benchmarking and profiling of these functions was done on a
+  relatively small data frame of 54700 rows and a single measured variable.
+  In these tests, computing the grouping vector with \code{group_chunks()}
+  takes between 1/5 and 1/10 the time that it takes splitting the data frame
+  with \code{split_chunks()}. The performance depends on how the time is
+  stored, with numeric values being faster. Passing \code{na.rm = TRUE} also
+  slows down the computations.
+}
+\note{
+Storing the time as a numeric variable instead of as \code{POSIXct}
+  makes computations faster, specially in \code{split_chunks()}.
+}
+\examples{
+# keep all qty columns, add differences
+chunks.ls <-
+  split_chunks(three_chunks.tb,
+               time.name = "time",
+               qty.name = NULL,
+               chunk.min.time = 0.051,
+               chunk.min.rows = 1.8e4,
+               verbose = FALSE)
+str(chunks.ls)
+
+# generate an integer vector suitable for grouping
+chunks.grp <-
+group_chunks(three_chunks.tb,
+               time.name = "time",
+               qty.name = NULL,
+               chunk.min.time = 0.051,
+               chunk.min.rows = 1.8e4,
+               verbose = FALSE)
+str(chunks.grp)
+unique(chunks.grp)
+
+# return start times of chunks
+group_chunks(three_chunks.tb,
+               time.name = "time",
+               qty.name = NULL,
+               chunk.min.time = 0.051,
+               chunk.min.rows = 1.8e4,
+               verbose = FALSE,
+               returned.value = "start.times")
+
+# return list with both the grouting vector and the start times
+times_and_grouping.ls <-
+  group_chunks(three_chunks.tb,
+               time.name = "time",
+               qty.name = NULL,
+               chunk.min.time = 0.051,
+               chunk.min.rows = 1.8e4,
+               verbose = FALSE,
+               returned.value = "all")
+str(times_and_grouping.ls)
+
 }

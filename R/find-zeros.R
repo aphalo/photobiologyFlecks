@@ -45,7 +45,7 @@ find_zeros <- function(time,
   zeros <- which(n1n2 < 0 & abs(n1n2) > zero.lim) + 1L
   names(zeros) <- ifelse(sgf[zeros] < 0, "up", "low")
 
-  message("Found ", length(zeros), "zeros")
+  message("Found ", length(zeros), " zeros")
   if (length(zeros)) {
     message("You may want to try with a different 'zero.lim' value.")
     return(data.frame())
