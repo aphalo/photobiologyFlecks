@@ -26,7 +26,7 @@ group_chunks(
   chunk.min.rows = 2,
   add.diffs = TRUE,
   verbose = FALSE,
-  returned.value = "group.idxs",
+  returned.value = "chunk.idxs",
   na.rm = FALSE
 )
 }
@@ -58,6 +58,9 @@ Useful for debugging.}
 
 \item{na.rm}{logical Omit rows of \code{data} containing \code{NA} values
 after selecting variables.}
+
+\item{returned.value}{character One of \code{"chunk.times"},
+\code{"chunk.idxs"} or \code{"all"}.}
 }
 \value{
 \code{split_chunks()} returns a list of data frames of varying
@@ -71,8 +74,8 @@ after selecting variables.}
   to the number of rows in \code{x}. The vector is suitable for grouping, as
   a different integer is assigned to each chunk, and \code{NA} is used to
   indicate observations that do not belong to chunks. Alternatively, it can
-  return a \code{POSIXct} vector with the starting time of each individual
-  chunk.
+  return a \code{POSIXct} vector, with one member per chunk, with the
+  starting time of each individual chunk.
 }
 \description{
 Split a time series stored in a data frame at breaks (long time steps),
@@ -99,7 +102,7 @@ When time series of data are acquired in bursts or chunks separated
   in variables other than time are divided by the corresponding time
   differences, with changes expressed as a rate per second.
 
-  Method \code{\link{fdiff}()} must be available for the class of the variable
+  Method \code{\link[collapse]{fdiff}()} must be available for the class of the variable
   named by the argument to \code{time.name}. The class of this column is in
   most cases numeric, date, or time. If \code{add.diffs = TRUE} this
   requirement also applies to the variable(s) named by the argument passed to
@@ -161,7 +164,7 @@ group_chunks(three_chunks.tb,
                chunk.min.time = 0.051,
                chunk.min.rows = 1.8e4,
                verbose = FALSE,
-               returned.value = "start.times")
+               returned.value = "chunk.times")
 
 # return list with both the grouting vector and the start times
 times_and_grouping.ls <-

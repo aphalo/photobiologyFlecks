@@ -1,6 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^data.raw
+^data-raw
+^inst-not
 ^tests-offline
 ^_pkgdown\.yml$
 ^docs$

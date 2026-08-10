@@ -2,7 +2,7 @@ Package: photobiologyFlecks
 Type: Package
 Title: Analysis of sun-, cloud- and shade flecks
 Version: 0.0.0.9001
-Date: 2026-08-07
+Date: 2026-08-10
 Authors@R: c(
     person("Pedro J.", "Aphalo", 
            email = "pedro.aphalo@helsinki.fi", 
@@ -43,4 +43,4 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: rmarkdown
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0

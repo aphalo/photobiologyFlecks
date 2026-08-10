@@ -41,7 +41,7 @@
 #'   in variables other than time are divided by the corresponding time
 #'   differences, with changes expressed as a rate per second.
 #'
-#'   Method \code{\link{fdiff}()} must be available for the class of the variable
+#'   Method \code{\link[collapse]{fdiff}()} must be available for the class of the variable
 #'   named by the argument to \code{time.name}. The class of this column is in
 #'   most cases numeric, date, or time. If \code{add.diffs = TRUE} this
 #'   requirement also applies to the variable(s) named by the argument passed to
@@ -84,8 +84,8 @@
 #'   to the number of rows in \code{x}. The vector is suitable for grouping, as
 #'   a different integer is assigned to each chunk, and \code{NA} is used to
 #'   indicate observations that do not belong to chunks. Alternatively, it can
-#'   return a \code{POSIXct} vector with the starting time of each individual
-#'   chunk.
+#'   return a \code{POSIXct} vector, with one member per chunk, with the
+#'   starting time of each individual chunk.
 #'
 #' @export
 #'
@@ -118,7 +118,7 @@
 #'                chunk.min.time = 0.051,
 #'                chunk.min.rows = 1.8e4,
 #'                verbose = FALSE,
-#'                returned.value = "start.times")
+#'                returned.value = "chunk.times")
 #'
 #' # return list with both the grouting vector and the start times
 #' times_and_grouping.ls <-
@@ -213,6 +213,9 @@ split_chunks <-
 
 #' @rdname split_chunks
 #'
+#' @param returned.value character One of \code{"chunk.times"},
+#'   \code{"chunk.idxs"} or \code{"all"}.
+#'
 #' @export
 #'
 group_chunks <-
@@ -224,7 +227,7 @@ group_chunks <-
            chunk.min.rows = 2,
            add.diffs = TRUE,
            verbose = FALSE,
-           returned.value = "group.idxs",
+           returned.value = "chunk.idxs",
            na.rm = FALSE) {
     if (!is.data.frame(data)) {
       stop("'data' must be a data.frame, not a'", class(data)[1], "'")
@@ -251,7 +254,7 @@ group_chunks <-
     chunk.lengths <- collapse::fdiff(gaps_at)[-1]
     good.chunks <- chunk.lengths >= chunk.min.rows
 
-    if (returned.value != "group.idxs") {
+    if (returned.value != "chunk.idxs") {
       chunk.start.times <- data[[time.name]][gaps_at][good.chunks]
     }
     chunk.idxs <- seq_along(chunk.lengths)
@@ -260,23 +263,23 @@ group_chunks <-
 
     if (!all(is.na(chunk.idxs))) {
       if (verbose) {
-        message("Found ", length(na.omit(chunk.idxs)),
+        message("Found ", length(stats::na.omit(chunk.idxs)),
                 " chunks with length(s) in [",
                 paste(range(chunk.lengths, na.rm = TRUE), collapse = ".."), "]")
       }
     } else {
       message("Found no chunks with >= ", chunk.min.rows, " rows")
     }
-    if (returned.value == "group.idxs") {
+    if (returned.value == "chunk.idxs") {
       group.idxs
-    } else if (returned.value == "start.times") {
+    } else if (returned.value == "chunk.times") {
       chunk.start.times
     } else if (returned.value == "all") {
       list(start.times = chunk.start.times,
            grouping = group.idxs)
     } else {
       warning("Bad argument!: 'returned.value = \"", returned.value, "\"'; ",
-              "expected: \"start.times\", \"group.idxs\", or \"all\"")
+              "expected: \"chunk.times\", \"chunk.idxs\", or \"all\"")
       NA
     }
   }
